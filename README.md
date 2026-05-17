@@ -4,6 +4,8 @@
 
 - [FEATURES](#features)
 - [CONTENTS](#contents)
+- [LICENSE](#license)
+- [RELEASES](#releases)
 - [SETUP STEPS](#setup-steps)
 - [CHANGING THE TRACKED AVATAR](#changing-the-tracked-avatar)
 - [DEFAULT CONTENTS OF Target_Config NOTECARD](#default-contents-of-target_config-notecard)
@@ -31,8 +33,7 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 
 ## CONTENTS
 
-After unpacking the product box, find the Discord IM Online Tracker folder in your inventory.
-This folder will contain the following:
+After unpacking the product box, find the Discord IM Online Tracker folder in your inventory. This folder will contain the following:
 
 - "Discord IM Online Tracker (rez me)" object
 - "Target_Config" notecard
@@ -43,6 +44,37 @@ This folder will contain the following:
 - Discord IM Online Tracker (rez me) object is Copy/Modify/No Transfer
 - Discord IM Online Tracker script is Copy/No Modify/No Transfer
 - Target_Config notecard is Copy/Modify/Transfer
+
+## LICENSE
+
+The `Discord_IM_Online_Tracker.lsl` script is released under the terms of the GNU General Public License version 3 (GPLv3). This is a strong copyleft free software license. Its primary terms guarantee users the freedom to run, study, share, and modify the software. In return, any publicly distributed modifications or derivative works must also be released under the same GPLv3 terms.
+
+### Core Permissions
+
+- Commercial and Private Use: You can use, modify, and privately use the software for any purpose, including commercial operations.
+- Redistribution: You are permitted to share or sell the software, provided you pass on the exact same freedoms to recipients.
+
+### Key Obligations
+
+- Source Code Disclosure: If you distribute a compiled binary to the public, you must also provide the complete, corresponding source code.
+- Notice Requirements: You must keep all original copyright notices intact and visibly display that the modified work is licensed under the GPLv3.
+- Same License (Copyleft): Any additions, modifications, or derivatives must be made completely free and licensed under the same GPLv3 terms.
+
+### Second Life and Open Source
+
+Software theft and piracy is rampant in Second Life. For example, almost all of the commercial Animation Overriders (AO) available in Second Life are based on the GPL AO created years ago by Zhao but none of these commercial vendors make their source code available nor have they complied with the licensing terms of the GPL. They reap significant profits and do not contribute back to the open source community. It is basically the Wild Wild West out there with little or no enforcement of license terms and very little action from Linden Labs to curb this behavior.
+
+The Truth &amp; Beauty Lab creates open source projects for Second Life and complies with open source licensing in all of its products and projects. We encourage others to do so as well. Open source thrives when there is an active community contributing to its development and adoption. In the absence of any effective enforcement mechanism, compliance and contribution to open source projects in Second Life must rely almost entirely on a community of cooperative and supportive individuals. Please join us in this effort.
+
+## RELEASES
+
+To create a Discord IM Online Tracker from release artifacts in this repository, download the `Discord_IM_Online_Tracker.lslo` optimized LSL script and `Target_Config` notecard from the latest release. Upload these to Second Life and copy them into a prim.
+
+Edit the `Target_Config` notecard, replacing "target-avatar-uuid" with the UUID of the Avatar you wish to track.
+
+Note that creating a custom scripted prim from release artifacts may not function as expected. The prim needs to be sculpted in the proper manner and prim faces numbered matching what the script expects. The Second Life Marketplace listing for this product includes a rezzable object already prepared in this manner. The DIY approach using release artifacts may require additional effort but is provided for those who wish to experiment and customize.
+
+More detailed setup instructions can be found in the `Features_and_Setup_Instructions.txt` release artifact or this README.
 
 ## SETUP STEPS
 
@@ -176,11 +208,12 @@ This product communicates directly from Second Life to Discord. It establishes a
 The Lab has repeatedly refined resident's rights in various documents. As a user of this product (or any product of broadly similar nature), you are obliged to adhere to the regulations in those documents.
 
 Second Life Terms of Service: https://www.lindenlab.com/tos
+
 Second Life Community Standards: https://www.lindenlab.com/legal/community-standards
+
 Linden Lab use of personal data: https://wiki.secondlife.com/wiki/Linden_Lab_Official:Using_Personal_Data
 
 In order to use this product you need to abide to the requirements laid out in those documents (and any documents the Lab might add during your usage of this product).
-
 
 ## FEEDBACK
 
