@@ -56,6 +56,7 @@ gh release create v${VERSION} ${DRAFT} \
                   --target "${BRANCH}" \
                   --notes-file README.md \
                   Discord_IM_Online_Tracker.lslo \
+                  Features_and_Setup_Instructions.txt \
                   Target_Config \
                   ${PRODUCT}-${VERSION}.tar.gz
 
