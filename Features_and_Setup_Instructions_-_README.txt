@@ -1,16 +1,7 @@
-# Discord IM Online Tracker
+Thank you for purchasing the Discord IM Online Tracker!
 
-## Table of Contents
-
-- [FEATURES](#features)
-- [CONTENTS](#contents)
-- [SETUP STEPS](#setup-steps)
-- [CHANGING THE TRACKED AVATAR](#changing-the-tracked-avatar)
-- [DEFAULT CONTENTS OF Target_Config NOTECARD](#default-contents-of-target_config-notecard)
-- [DISCORD SETUP](#discord-setup)
-- [FEEDBACK](#feedback)
-
-## FEATURES
+FEATURES
+────────
 
 The Discord IM Online Tracker is a sculpted & scripted prim with the following features
 
@@ -27,9 +18,10 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - The frequency of Online status updates can be configured [Default: every 2 minutes]
 - The owner can touch the object to force a status update and toggle hover text display
 - Optimized low lag script and only a single prim
-- Open Source, GPL Version 3 licensed script, view the source on [Github](https://github.com/missyrestless/OnlineTracker)
+- Open Source, GPL Version 3 licensed script, view the source on Github at https://github.com/missyrestless/OnlineTracker
 
-## CONTENTS
+CONTENTS
+────────
 
 After unpacking the product box, find the Discord IM Online Tracker folder in your inventory.
 This folder will contain the following:
@@ -38,57 +30,57 @@ This folder will contain the following:
 - "Target_Config" notecard
 - "Features and Setup Instructions - README" notecard
 
-### Permissions
+Permissions:
+    Discord IM Online Tracker (rez me) object is Copy/Modify/No Transfer
+    Discord IM Online Tracker script is Copy/No Modify/No Transfer
+    Target_Config notecard is Copy/Modify/Transfer
 
-- Discord IM Online Tracker (rez me) object is Copy/Modify/No Transfer
-- Discord IM Online Tracker script is Copy/No Modify/No Transfer
-- Target_Config notecard is Copy/Modify/Transfer
+SETUP STEPS
+───────────
 
-## SETUP STEPS
+1. Rez a copy of the "Discord IM Online Tracker (rez me)" object:
 
-### Rez a copy of the "Discord IM Online Tracker (rez me)" object:
+   Drag and Drop the "Discord IM Online Tracker (rez me)" object from your inventory to an in-world location.
 
-Drag and Drop the "Discord IM Online Tracker (rez me)" object from your inventory to an in-world location.
+   The online tracker initially begins to track the owner's online status.
+   To configure an Avatar to track proceed to setup step 2.
 
-The online tracker initially begins to track the owner's online status.
+2. Edit the "Target_Config" notecard:
 
-To configure an Avatar to track proceed to setup step 2.
+   Right click the "Target_Config" notecard in your inventory and select "Open"
+   Replace "target-avatar-uuid" with the UUID of the Avatar you wish to track
+     The UUID of an Avatar is displayed in their Profile as the Key just under their Name
+     Copy and Paste the Key from the Avatar Profile into the Target_Config notecard
+   Save the modified notecard and close the Edit window
 
-### Edit the "Target_Config" notecard:
-
-- Right click the "Target_Config" notecard in your inventory and select "Open"
-- Replace "target-avatar-uuid" with the UUID of the Avatar you wish to track
-  - The UUID of an Avatar is displayed in their Profile as the Key just under their Name
-  - Copy and Paste the Key from the Avatar Profile into the Target_Config notecard
-- Save the modified notecard and close the Edit window
-
-### Drag and Drop the "Target_Config" notecard onto the rezzed Discord IM Online Tracker object
+3. Drag and Drop the "Target_Config" notecard onto the rezzed Discord IM Online Tracker object
 
 You can repeat this process for as many Avatars as you wish to track, one Avatar per rezzed tracker object.
 
 Each rezzed online tracker object will rename itself with the tracked Avatar display name in its object name.
 
-## CHANGING THE TRACKED AVATAR
+CHANGING THE TRACKED AVATAR
+───────────────────────────
 
 To change the tracked Avatar of an existing and already configured Discord IM Online Tracker, edit the object and change the TARGET_UUID setting in the Target_Config notecard.
 
-### Edit the Discord IM Online Tracker object
+1. Edit the Discord IM Online Tracker object
 
    - Right click the Discord IM Online Tracker object and select "Edit"
    - Click the Contents tab in the Edit window
 
-### Edit the Target_Config notecard
+2. Edit the Target_Config notecard
 
    - Right click the Target_Config notecard in the Contents tab and select "Open"
    - Replace the existing setting of the TARGET_UUID with the new tracked Avatar UUID (Key)
 
-### Save the Target_Config notecard and close the Edit window
+3. Save the Target_Config notecard and close the Edit window
 
 The Discord IM Online Tracker will detect the change and reset, tracking the new Avatar's online status
 
-## DEFAULT CONTENTS OF Target_Config NOTECARD
+DEFAULT CONTENTS OF Target_Config NOTECARD
+──────────────────────────────────────────
 
-```bash
 # Only the tracked Avatar UUID is required, all other configuration settings are optional
 TARGET_UUID = target-avatar-uuid
 END_SETTINGS
@@ -112,15 +104,17 @@ END_SETTINGS
 #
 # Time in seconds between online status checks [Default: 120.0]
 # CHECK_INTERVAL = 120.0
-```
 
-## DISCORD SETUP
+DISCORD SETUP
+─────────────
 
-### What is Discord?
+What is Discord?
+────────────────
 
 Discord is a chat platform very popular among gamers. Using Discord is free, and everyone can set up a "Discord server" for free as well! In this server, you can create channels. The Discord IM Online Tracker can be configured to post status messages to a Discord channel. For more information see https://en.wikipedia.org/wiki/Discord_(software) and https://discord.com/blog/starting-your-first-discord-server
 
-### Getting started
+Getting started
+───────────────
 
 In order to be able to communicate from SL to Discord, you need to create a "Webhook". To do this this, you need your own Discord server or a server you co-administer. For testing purposes, we highly recommend to make a new server (it's free!), or at least create a new channel on your existing server.
 
@@ -128,25 +122,20 @@ The Webhook is best created in the Discord web application;  NOT on the mobile a
 
 In the channel list, you will find a small cogwheel icon, that gets you to the channel configuration. Click it, chose "Integrations" and click on "Create Webhook". The name of the Webhook is irrelevant (and won't show up anywhere). All you need is the Webhook URL, which looks like this:
 
-```
 https://discord.com/api/webhooks/aaaaaalotofgibberishandnumbersandsuch
-```
 
 The Webhook might also look like this:
 
-```
 https://discordapp.com/api/webhooks/aaaaaalotofgibberishandnumbersandsuch
-```
 
 Or like this:
 
-```
 https://ptb.discord.com/api/webhooks/aaaaaalotofgibberishandnumbersandsuch
-```
 
 All three versions work fine - just use whichever Discord gives you.
 
-### Configuration
+Configuration
+─────────────
 
 Once the Webhook is created, you need to configure the online tracker. A configuration notecard is provided. In case it is missing, create a new one with the name "Target_Config".
 
@@ -154,12 +143,10 @@ The notecard contains variable/argument pairs, separated by equal signs " = ". E
 
 The "Target_Config" notecard contains two variables pertaining to Discord:
 
-```bash
 # Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
 DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # Messages will appear to be from this user [Default: Discord IM Online Tracker]
 DISCORD_USER = Discord IM Online Tracker
-```
 
 "DISCORD_URL" is simply the setting where you input your Webhook URL from Discord (see above). 
 
@@ -167,12 +154,13 @@ Make sure the Webhook exists and is created for the proper channel. You can chan
 
 To enable online status messages to be posted to your Discord channel, all that is required is configuring the DISCORD_URL setting in the Target_Config notecard with your Discord channel Webhook URL. Note that only lines above the END_SETTINGS line in the notecard get read - the DISCORD_URL setting must be placed above this line.
 
-### Data processing & privacy
+Data processing & privacy
+─────────────────────────
 
 This product communicates directly from Second Life to Discord. It establishes a direct transmission from the object in Second Life to the Discord servers. At no single point does the communication get stored, relayed, routed, redirected, or otherwise processed by us, or any entity under our control. We can't, for obvious reasons, vouch for the operators of Second Life or Discord. Please refer to their respective privacy policies.
 
-#### Linden Lab's rules & regulations
-
+Linden Lab's rules & regulations
+────────────────────────────────
 The Lab has repeatedly refined resident's rights in various documents. As a user of this product (or any product of broadly similar nature), you are obliged to adhere to the regulations in those documents.
 
 Second Life Terms of Service: https://www.lindenlab.com/tos
@@ -182,6 +170,7 @@ Linden Lab use of personal data: https://wiki.secondlife.com/wiki/Linden_Lab_Off
 In order to use this product you need to abide to the requirements laid out in those documents (and any documents the Lab might add during your usage of this product).
 
 
-## FEEDBACK
+Suggestions, Bug Reports, Feature Requests
+──────────────────────────────────────────
 
 Please let us know if you run into issues with this product or have any suggestions. Also let us know if you like it. We are open to feature requests. Email missyrestless@gmail.com or send an IM or notecard to Missy Restless in-world.
