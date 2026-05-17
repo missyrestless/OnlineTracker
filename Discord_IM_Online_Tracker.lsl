@@ -238,7 +238,7 @@ sendToDiscord(string dm, string et) {
                     "\"color\": \"" + D_COL + "\", " +
                     "\"timestamp\": \"" + timUTC + "\", " +
                     "\"footer\": { \"text\": \"" + et + "\", " +
-                        "\"icon_url\": \"https://slbotcontrol.github.io/assets/second-life.png\" }" +
+                        "\"icon_url\": \"https://raw.githubusercontent.com/missyrestless/OnlineTracker/refs/heads/main/online_tracker.png\" }" +
              " } ] }";
 
     // Make the HTTP request to the Discord Webhook
