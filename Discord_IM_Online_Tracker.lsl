@@ -206,17 +206,48 @@ string getElapsedTime(integer secs)
 }
 
 // Function to send the message to Discord
-// dm is message to send, et is elapsed time since last login/logoff
-sendToDiscord(string dm, string et) {
+// dm is message to send, et is elapsed time since last login/logoff, ols is 0/1 logoff/login
+// sendToDiscord("message to send", "elapsed time since last log", 0 or 1);
+sendToDiscord(string dm, string et, integer ols) {
     string timUTC = llGetTimestamp();
     string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
     string docURL = "https://online.neoman.dev/";
+    string repURL = "https://github.com/missyrestless/OnlineTracker";
     // Images
     string otrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
-    string icoURL = otrURL + "/refs/heads/main/images/online_icon.png";
-    //string ftrURL = otrURL + "/refs/heads/main/images/online_tracker.png";
+    // string icoURL = otrURL + "/refs/heads/main/images/online_icon.png";
+    // string ftrURL = otrURL + "/refs/heads/main/images/online_tracker.png";
     string ftrURL = otrURL + "/refs/heads/main/images/stopwatch.png";
-    // Can use LSL lists
+    string ftrTXT;
+    if (ols) {
+        ftrTXT = "Time of Second Life login";
+    } else {
+        ftrTXT = "Time of Second Life logout";
+    }
+
+    // Create the JSON payload, backslashing quotes all over the place
+    string json = "{ \"avatar_url\": \"" + aviURL + TargetName + "/thumb_sl_image.png\", " +
+                    "\"username\": \"Second Life Online Tracker\", \"embeds\": [ { " +
+                    "\"title\": \"" + dm + "  (click to view profile)\", " +
+                    "\"url\": \"" + webprofURL + "\", " +
+                    "\"description\": \"" + et + "\\n\\n🤔 [Online Tracker Documentation](" +
+                        docURL + ")\\n\\n👩 [Online Tracker Github Repository](" + repURL + ")\", " +
+                    "\"color\": \"" + D_COL + "\", " +
+                    "\"timestamp\": \"" + timUTC + "\", " +
+                    "\"footer\": { \"text\": \"" + ftrTXT + "\", " +
+                        "\"icon_url\": \"" + ftrURL + "\" }" +
+             " } ] }";
+
+    // Make the HTTP request to the Discord Webhook, sending the JSON payload
+    discordRequestID = llHTTPRequest(Discord_URL, [
+        HTTP_METHOD, "POST", 
+        HTTP_MIMETYPE, "application/json",
+        HTTP_VERIFY_CERT,      TRUE,
+        HTTP_VERBOSE_THROTTLE, TRUE,
+        HTTP_PRAGMA_NO_CACHE,  TRUE
+    ], json);
+
+    // Could have used LSL lists
     // list json    = [ 
     //     "avatar_url",  aviURL + TargetName + "/thumb_sl_image.png",
     //     "username", "Online Tracker",
@@ -235,28 +266,7 @@ sendToDiscord(string dm, string et) {
     // Then convert the list to JSON and pass it in the request:
     //    llList2Json(JSON_OBJECT, json) );
     //
-    // Or just straight up JSON, faster but less readable
-    string json = "{ \"avatar_url\": \"" + aviURL + TargetName + "/thumb_sl_image.png\", " +
-                    "\"username\": \"Second Life Online Tracker\", \"embeds\": [ { " +
-                    "\"title\": \"" + TargetDisplayName + "\", " +
-                    "\"url\": \"" + webprofURL + "\", " +
-                    "\"description\": \"" + dm + "\", " +
-                    "\"author\": { \"name\": \"Documentation Website\", \"url\": \"" + docURL +
-                        "\", \"icon_url\": \"" + icoURL + "\" }, " +
-                    "\"color\": \"" + D_COL + "\", " +
-                    "\"timestamp\": \"" + timUTC + "\", " +
-                    "\"footer\": { \"text\": \"" + et + "\", " +
-                        "\"icon_url\": \"" + ftrURL + "\" }" +
-             " } ] }";
-
-    // Make the HTTP request to the Discord Webhook
-    discordRequestID = llHTTPRequest(Discord_URL, [
-        HTTP_METHOD, "POST", 
-        HTTP_MIMETYPE, "application/json",
-        HTTP_VERIFY_CERT,      TRUE,
-        HTTP_VERBOSE_THROTTLE, TRUE,
-        HTTP_PRAGMA_NO_CACHE,  TRUE
-    ], json);
+    // But straight up JSON is faster although less readable
 }
 
 default
@@ -342,7 +352,7 @@ default
                     lastLogin = llGetUnixTime();
                     if (lastLogoff <= 0) {
                         // No record of last login
-                        elapsedTimeStr = "Unknown";
+                        elapsedTimeStr = "unknown time";
                     } else {
                         elapsedTimeStr = getElapsedTime(lastLogin - lastLogoff);
                         status_msg = status_msg + "\n(Offline for " + elapsedTimeStr + ")";
@@ -356,7 +366,7 @@ default
                         if (DiscordRelay) {
                             status_msg = "**" + TargetDisplayName + "** is now **ONLINE**";
                             D_COL = D_GRN;
-                            sendToDiscord(status_msg, "Offline for " + elapsedTimeStr);
+                            sendToDiscord(status_msg, "Offline for " + elapsedTimeStr, 1);
                         }
                     }
                 }
@@ -367,7 +377,7 @@ default
                     lastLogoff = llGetUnixTime();
                     if (lastLogin <= 0) {
                         // No record of last login
-                        elapsedTimeStr = "Unknown";
+                        elapsedTimeStr = "unknown time";
                     } else {
                         elapsedTimeStr = getElapsedTime(lastLogoff - lastLogin);
                     }
@@ -380,7 +390,7 @@ default
                         if (DiscordRelay) {
                             status_msg = "**" + TargetDisplayName + "** is now **OFFLINE**";
                             D_COL = D_RED;
-                            sendToDiscord(status_msg, "Online for " + elapsedTimeStr);
+                            sendToDiscord(status_msg, "Online for " + elapsedTimeStr, 0);
                         }
                     }
                 }
