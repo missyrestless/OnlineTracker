@@ -354,7 +354,7 @@ default
                             llInstantMessage(owner, status_msg);
                         }
                         if (DiscordRelay) {
-                            status_msg = TargetDisplayName + " is now **ONLINE**";
+                            status_msg = "**" + TargetDisplayName + "** is now **ONLINE**";
                             D_COL = D_GRN;
                             sendToDiscord(status_msg, "Offline for " + elapsedTimeStr);
                         }
@@ -378,7 +378,7 @@ default
                             llInstantMessage(owner, status_msg);
                         }
                         if (DiscordRelay) {
-                            status_msg = status_pre + "**OFFLINE**";
+                            status_msg = "**" + TargetDisplayName + "** is now **OFFLINE**";
                             D_COL = D_RED;
                             sendToDiscord(status_msg, "Online for " + elapsedTimeStr);
                         }
