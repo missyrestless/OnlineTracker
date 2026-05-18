@@ -208,8 +208,13 @@ string getElapsedTime(integer secs)
 // Function to send the message to Discord
 // dm is message to send, et is elapsed time since last login/logoff
 sendToDiscord(string dm, string et) {
-    string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
     string timUTC = llGetTimestamp();
+    string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
+    string docURL = "https://online.neoman.dev/";
+    // Images
+    string otrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
+    string icoURL = otrURL + "/refs/heads/main/images/online_icon.png";
+    string ftrURL = otrURL + "/refs/heads/main/images/online_tracker.png";
     // Can use LSL lists
     // list json    = [ 
     //     "avatar_url",  aviURL + TargetName + "/thumb_sl_image.png",
@@ -234,11 +239,13 @@ sendToDiscord(string dm, string et) {
                     "\"username\": \"Online Tracker\", \"embeds\": [ { " +
                     "\"title\": \"" + TargetDisplayName + "\", " +
                     "\"url\": \"" + webprofURL + "\", " +
+                    "\"author\": { \"name\": \"Doc\", \"url\": \"" + docURL +
+                        "\", \"icon_url\": \"" + icoURL + "\" }, " +
                     "\"description\": \"" + dm + "\", " +
                     "\"color\": \"" + D_COL + "\", " +
                     "\"timestamp\": \"" + timUTC + "\", " +
                     "\"footer\": { \"text\": \"" + et + "\", " +
-                        "\"icon_url\": \"https://raw.githubusercontent.com/missyrestless/OnlineTracker/refs/heads/main/online_tracker.png\" }" +
+                        "\"icon_url\": \"" + ftrURL + "\" }" +
              " } ] }";
 
     // Make the HTTP request to the Discord Webhook
