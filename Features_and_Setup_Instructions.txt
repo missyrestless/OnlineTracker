@@ -104,7 +104,7 @@ END_SETTINGS
 # HOVER_TEXT = FALSE
 #
 # Override the displayed target name [Default: use display name]
-# TARGET_NAME = Target Avatar Name
+# DISPLAY_NAME = Target Avatar Display Name
 #
 # Time in seconds between online status checks [Default: 120.0]
 # CHECK_INTERVAL = 120.0

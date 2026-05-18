@@ -411,7 +411,7 @@ default
                     if ( value == "FALSE" ) value = "0";
                     if ( name == "TARGET_UUID" ) {
                         TargetUuid = (key)value;
-                    } else if ( name == "TARGET_NAME" ) {
+                    } else if ( name == "DISPLAY_NAME" ) {
                         TargetDisplayName = value;
                         GetDisplayName = FALSE;
                     } else if ( name == "CHECK_INTERVAL" ) {
