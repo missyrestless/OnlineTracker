@@ -214,7 +214,8 @@ sendToDiscord(string dm, string et) {
     // Images
     string otrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
     string icoURL = otrURL + "/refs/heads/main/images/online_icon.png";
-    string ftrURL = otrURL + "/refs/heads/main/images/online_tracker.png";
+    //string ftrURL = otrURL + "/refs/heads/main/images/online_tracker.png";
+    string ftrURL = otrURL + "/refs/heads/main/images/stopwatch.png";
     // Can use LSL lists
     // list json    = [ 
     //     "avatar_url",  aviURL + TargetName + "/thumb_sl_image.png",
@@ -236,12 +237,12 @@ sendToDiscord(string dm, string et) {
     //
     // Or just straight up JSON, faster but less readable
     string json = "{ \"avatar_url\": \"" + aviURL + TargetName + "/thumb_sl_image.png\", " +
-                    "\"username\": \"Online Tracker\", \"embeds\": [ { " +
+                    "\"username\": \"Second Life Online Tracker\", \"embeds\": [ { " +
                     "\"title\": \"" + TargetDisplayName + "\", " +
                     "\"url\": \"" + webprofURL + "\", " +
-                    "\"author\": { \"name\": \"Doc\", \"url\": \"" + docURL +
-                        "\", \"icon_url\": \"" + icoURL + "\" }, " +
                     "\"description\": \"" + dm + "\", " +
+                    "\"author\": { \"name\": \"Documentation Website\", \"url\": \"" + docURL +
+                        "\", \"icon_url\": \"" + icoURL + "\" }, " +
                     "\"color\": \"" + D_COL + "\", " +
                     "\"timestamp\": \"" + timUTC + "\", " +
                     "\"footer\": { \"text\": \"" + et + "\", " +
