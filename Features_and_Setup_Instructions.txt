@@ -1,5 +1,9 @@
 Thank you for purchasing the Discord IM Online Tracker!
 
+The 'Discord IM Online Tracker' monitors the online status of any avatar in Second Life and sends notices of login/logoff to the owner of the object and/or a configured Discord channel.
+
+See https://online.neoman.dev for full documentation and How-To articles.
+
 FEATURES
 ────────
 
