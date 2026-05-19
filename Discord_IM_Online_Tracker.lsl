@@ -19,6 +19,7 @@
 // 15-May-2026 - Add support for sending online status messages to a Discord channel
 // 16-May-2026 - Add setup instructions and prep for Marketplace
 // 17-May-2026 - Use embeds objects for Discord postings
+// 18-May-2026 - Format date/time, display last login/logoff in Discord messages
 //
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
@@ -33,8 +34,6 @@ key Default_Uuid = "094743dc-cb00-483f-9c35-99232e3a71f1";
 
 // Key for agent data requests
 key agentDataRequestID = NULL_KEY;
-// Key for agent data requests triggered by touch events
-key touchDataRequestID = NULL_KEY;
 // Keys for HTTP requests
 key discordRequestID = NULL_KEY;
 key profileRequestID = NULL_KEY;
@@ -42,6 +41,8 @@ key profileRequestID = NULL_KEY;
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
 integer lastLogin = 0;
+string  lastLoginStr = "";
+string  lastLogoffStr = "";
 
 integer IsOnline = FALSE; // Assume offline initially
 integer GetDisplayName = TRUE;
@@ -144,6 +145,105 @@ init_target() {
     }
 }
 
+string mInt2mStr(string monthInt) {
+    list months=["","January","February","March", "April","May","June", "July",
+                    "August","September", "October","November","December"];
+    return llList2String(months, (integer)monthInt);
+}
+
+string ConvertToAmPm(string time24) {
+    // Expected input format: "HH:MM" (e.g., "15:30")
+    integer hours = (integer)llGetSubString(time24, 0, 1);
+    string minutes = llGetSubString(time24, 2, -1); // Includes the leading ":"
+
+    string suffix = " AM";
+    if (hours >= 12) {
+        suffix = " PM";
+    }
+
+    integer h12 = hours % 12;
+    if (h12 == 0) h12 = 12; // Handle midnight and noon
+
+    return (string)h12 + minutes + suffix;
+}
+
+// Convert Unix Time to SLT, identifying whether it is currently PST or PDT (i.e. Daylight Saving aware)
+string Unix2SLT(integer insecs)
+{
+    string str = Convert(insecs - (3600 * 8) );   // PST is 8 hours behind GMT
+    if (llGetSubString(str, -3, -1) == "PDT")     // if the result indicates Daylight Saving Time ...
+        str = Convert(insecs - (3600 * 7) );      // ... Recompute at 1 hour later
+    if (llGetSubString(str, -3, -1) == "PDT") {
+        str = llReplaceSubString(str, "PDT", "SLT", -1);
+    } else {
+        str = llReplaceSubString(str, "PST", "SLT", -1);
+    }
+    return str;
+}
+
+// This leap year test is correct for all years from 1901 to 2099 and hence is quite adequate for Unix Time computations
+integer LeapYear(integer year)
+{
+    return !(year & 3);
+}
+
+integer DaysPerMonth(integer year, integer month)
+{
+    if (month == 2)      return 28 + LeapYear(year);
+    return 30 + ( (month + (month > 7) ) & 1);           // Odd months up to July, and even months after July, have 31 days
+}
+
+string Convert(integer insecs)
+{
+    integer w; integer month; integer daysinyear;
+    integer mins = insecs / 60;
+    integer secs = insecs % 60;
+    integer hours = mins / 60;
+    mins = mins % 60;
+    integer days = hours / 24;
+    hours = hours % 24;
+    integer DayOfWeek = (days + 4) % 7;    // 0=Sun thru 6=Sat
+
+    integer years = 1970 +  4 * (days / 1461);
+    days = days % 1461;                  // number of days into a 4-year cycle
+
+    @loop;
+    daysinyear = 365 + LeapYear(years);
+    if (days >= daysinyear)
+    {
+        days -= daysinyear;
+        ++years;
+        jump loop;
+    }
+    ++days;
+
+    for (w = month = 0; days > w; )
+    {
+        days -= w;
+        w = DaysPerMonth(years, ++month);
+    }
+    string str =  ((string) years + "-" + llGetSubString ("0" + (string) month, -2, -1) + "-" + llGetSubString ("0" + (string) days, -2, -1) + " " +
+	llGetSubString ("0" + (string) hours, -2, -1) + ":" + llGetSubString ("0" + (string) mins, -2, -1) );
+
+    integer LastSunday = days - DayOfWeek;
+    string PST_PDT = " PST";                  // start by assuming Pacific Standard Time
+    // Up to 2006, PDT is from the first Sunday in April to the last Sunday in October
+    // After 2006, PDT is from the 2nd Sunday in March to the first Sunday in November
+    if (years > 2006 && month == 3  && LastSunday >  7)     PST_PDT = " PDT";
+    if (month > 3)                                          PST_PDT = " PDT";
+    if (month > 10)                                         PST_PDT = " PST";
+    if (years < 2007 && month == 10 && LastSunday > 24)     PST_PDT = " PST";
+    string yearPart = llGetSubString(str, 0, 3);
+    string monthPart = llGetSubString(str, 5, 6);
+    string dayPart = llGetSubString(str, 8, 9);
+    string timePart = llGetSubString(str, -5, -1);
+    list weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return (llList2String(weekdays, DayOfWeek) + ", " +
+                          mInt2mStr(monthPart) + " " +
+                          dayPart + ", " + yearPart + ", " +
+                          ConvertToAmPm(timePart) + PST_PDT);
+}
+
 // Input number of seconds, return a string with Days, Hours, Minutes, Seconds
 string getElapsedTime(integer secs)
 {
@@ -208,8 +308,7 @@ string getElapsedTime(integer secs)
 // Function to send the message to Discord
 // dm is message to send, et is elapsed time since last login/logoff, ols is 0/1 logoff/login
 // sendToDiscord("message to send", "elapsed time since last log", 0 or 1);
-sendToDiscord(string dm, string et, integer ols) {
-    string timUTC = llGetTimestamp();
+sendToDiscord(string dm, string et, integer ols, string time) {
     string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
     string docURL = "https://online.neoman.dev/";
     string repURL = "https://github.com/missyrestless/OnlineTracker";
@@ -231,9 +330,9 @@ sendToDiscord(string dm, string et, integer ols) {
                     "\"title\": \"" + dm + "  (click to view profile)\", " +
                     "\"url\": \"" + webprofURL + "\", " +
                     "\"description\": \"" + et + "\\n\\n🤔 [Online Tracker Documentation](" +
-                        docURL + ")\\n\\n👩 [Online Tracker Github Repository](" + repURL + ")\", " +
+                        docURL + ")\\n👩 [Online Tracker Github Repository](" + repURL + ")\", " +
                     "\"color\": \"" + D_COL + "\", " +
-                    "\"timestamp\": \"" + timUTC + "\", " +
+                    "\"timestamp\": \"" + time + "\", " +
                     "\"footer\": { \"text\": \"" + ftrTXT + "\", " +
                         "\"icon_url\": \"" + ftrURL + "\" }" +
              " } ] }";
@@ -280,6 +379,8 @@ default
         owner = llGetOwner();
         lastLogoff = 0;
         lastLogin = 0;
+        lastLogoffStr = "";
+        lastLoginStr = "";
         if (llGetInventoryType(CONFIG_CARD) == INVENTORY_NOTECARD) {
             NotecardLine = 0;
             D_QueryID = llGetNotecardLine( CONFIG_CARD, NotecardLine );
@@ -305,7 +406,7 @@ default
                 llSetText("", <0.0, 0.0, 0.0>, 0.0);
             }
             HoverText = !HoverText;
-            touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+            agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
         }
     }
 
@@ -319,24 +420,11 @@ default
         string status_pre = TargetDisplayName + " is now ";
         string status_msg = "";
 
-        if (queryid == touchDataRequestID) {
-            CurrentlyOnline = (integer)data;
-            // Local chat online status to owner on touch
-            if (CurrentlyOnline) {
-                status_pre = status_pre + "ONLINE. Click to view profile: ";
-                status_msg = status_pre + profileURL;
-                llOwnerSay(status_msg);
-            } else {
-                status_msg = status_pre + "OFFLINE.";
-                llOwnerSay(status_msg);
-            }
-            // Update status
-            IsOnline = CurrentlyOnline;
-        }
-        else if (queryid == agentDataRequestID) {
+        if (queryid == agentDataRequestID) {
             CurrentlyOnline = (integer)data;
 
             string elapsedTimeStr;
+            string timeStamp = llGetTimestamp();
             string status_pre = TargetDisplayName + " is now ";
             string status_msg = "";
             // Set hover text status and color
@@ -365,10 +453,14 @@ default
                         }
                         if (DiscordRelay) {
                             status_msg = "**" + TargetDisplayName + "** is now **ONLINE**";
+                            if (lastLoginStr != "") {
+                                elapsedTimeStr = elapsedTimeStr + "\\nPrevious login: " + lastLoginStr;
+                            }
                             D_COL = D_GRN;
-                            sendToDiscord(status_msg, "Offline for " + elapsedTimeStr, 1);
+                            sendToDiscord(status_msg, "Offline for " + elapsedTimeStr, 1, timeStamp);
                         }
                     }
+                    lastLoginStr = Unix2SLT(llGetUnixTime());
                 }
             }
             else {
@@ -389,10 +481,14 @@ default
                         }
                         if (DiscordRelay) {
                             status_msg = "**" + TargetDisplayName + "** is now **OFFLINE**";
+                            if (lastLogoffStr != "") {
+                                elapsedTimeStr = elapsedTimeStr + "\\nPrevious logoff: " + lastLogoffStr;
+                            }
                             D_COL = D_RED;
-                            sendToDiscord(status_msg, "Online for " + elapsedTimeStr, 0);
+                            sendToDiscord(status_msg, "Online for " + elapsedTimeStr, 0, timeStamp);
                         }
                     }
+                    lastLogoffStr = Unix2SLT(llGetUnixTime());
                 }
             }
             // Set hover text
