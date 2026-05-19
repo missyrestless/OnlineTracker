@@ -44,6 +44,12 @@ integer lastLogin = 0;
 string  lastLoginStr = "";
 string  lastLogoffStr = "";
 
+// Frame style and textures
+integer UseRGB = 1; 
+string  WoodOnline = "Online-Oak";
+string  WoodOffline = "Offline-Rosewood";
+float glow = 0.1;
+
 integer IsOnline = FALSE; // Assume offline initially
 integer GetDisplayName = TRUE;
 integer HoverText = FALSE;
@@ -52,7 +58,7 @@ integer NotecardLine;
 integer IMowner = TRUE;
 // Should online status be broadcast to a Discord channel
 integer DiscordRelay = FALSE;
-string Discord_URL = "";
+string  Discord_URL = "";
 // The name of the configuration notecard
 string CONFIG_CARD = "Target_Config";
 key D_QueryID;
@@ -90,9 +96,17 @@ SetSideTextures(vector col) // Set the sides to the online status texture
                 llSetPrimitiveParams([PRIM_FULLBRIGHT, i, TRUE]);
             }
         } else {
-            llSetTexture(WHT_UUID, i);
+            if (UseRGB) {
+                llSetTexture(WHT_UUID, i);
+            } else {
+                if (col == RED) {
+                    llSetTexture(WoodOffline, i);
+                } else {
+                    llSetTexture(WoodOnline, i);
+                }
+            }
             llSetColor(col, i);
-            llSetPrimitiveParams([PRIM_GLOW, i, 0.1]);
+            llSetPrimitiveParams([PRIM_GLOW, i, glow]);
         }
     }
 }
@@ -503,32 +517,45 @@ default
             string name;
             string value;
             list temp;
-            if ( data != EOF ) {
+            if (data != EOF) {
                 if (data == "END_SETTINGS") {
                     init_target();
                     return;
                 }
-                if ( llGetSubString(data, 0, 0) != "#" &&
-                     llStringTrim(data, STRING_TRIM) != "" ) {
+                if (llGetSubString(data, 0, 0) != "#" &&
+                     llStringTrim(data, STRING_TRIM) != "") {
                     temp = llParseString2List(data, ["="], []);
                     name = llStringTrim(llList2String(temp, 0), STRING_TRIM);
                     value = llStringTrim(llList2String(temp, 1), STRING_TRIM);
-                    if ( value == "TRUE" ) value = "1";
-                    if ( value == "FALSE" ) value = "0";
-                    if ( name == "TARGET_UUID" ) {
+                    if (value == "TRUE") value = "1";
+                    if (value == "FALSE") value = "0";
+                    if (name == "TARGET_UUID") {
                         TargetUuid = (key)value;
-                    } else if ( name == "DISPLAY_NAME" ) {
+                    } else if (name == "DISPLAY_NAME") {
                         TargetDisplayName = value;
                         GetDisplayName = FALSE;
-                    } else if ( name == "CHECK_INTERVAL" ) {
+                    } else if (name == "CHECK_INTERVAL") {
                         CheckInterval = (float)value; 
-                    } else if ( name == "HOVER_TEXT" ) {
+                    } else if (name == "GLOW") {
+                        glow = (float)value; 
+                    } else if (name == "HOVER_TEXT") {
                         HoverText = (integer)value; 
-                    } else if ( name == "DISCORD_URL" ) {
+                    } else if (name == "DISCORD_URL") {
                         Discord_URL = value;
                         DiscordRelay = TRUE;
-                    } else if ( name == "IM_OWNER" ) {
+                    } else if (name == "IM_OWNER") {
                         IMowner = (integer)value; 
+                    } else if (name == "FRAME_STYLE") {
+                        if ((value == "WOOD") || (value == "wood"))
+                            UseRGB = 0; 
+                    } else if (name == "WOOD_ONLINE") {
+                        if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
+                            WoodOnline = value;
+                        }
+                    } else if (name == "WOOD_OFFLINE") {
+                        if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
+                            WoodOffline = value;
+                        }
                     }
                 }
                 NotecardLine++;

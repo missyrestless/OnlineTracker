@@ -94,9 +94,6 @@ END_SETTINGS
 # Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
 # DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #
-# Messages will appear to be from this user [Default: Discord IM Online Tracker]
-# DISCORD_USER = Discord IM Online Tracker
-#
 # Enable or disable Instant Message notification to the owner [Default: TRUE]
 # IM_OWNER = TRUE
 #
@@ -108,6 +105,27 @@ END_SETTINGS
 #
 # Time in seconds between online status checks [Default: 120.0]
 # CHECK_INTERVAL = 120.0
+#
+# Frame style, can be RGB or WOOD [default: RGB]
+# FRAME_STYLE = RGB
+#
+# WOOD_ONLINE and WOOD_OFFLINE specify the texture names to use to indicate status.
+# Typically you would choose a darker texture for offline and lighter for online.
+# If you want to style the frame with other textures just add them to the object
+# Contents and specify the texture names here. They don't have to be wood,
+#
+# Only used if FRAME_STYLE = WOOD. The textures must be in the object Contents.
+#
+# WOOD_ONLINE = Online-Oak
+# or
+# WOOD_ONLINE = Online-Polette
+#
+# WOOD_OFFLINE = Offline-Rosewood
+#
+# Use GLOW_ONLINE and GLOW_OFFLINE to set the glow status of the beveled frame sides
+# GLOW_ONLINE = 0.2
+#
+# GLOW_OFFLINE = 0.0
 
 DISCORD SETUP
 ─────────────
@@ -145,12 +163,10 @@ Once the Webhook is created, you need to configure the online tracker. A configu
 
 The notecard contains variable/argument pairs, separated by equal signs " = ". Everything the online tracker does not recognize, gets ignored.
 
-The "Target_Config" notecard contains two variables pertaining to Discord:
+The "Target_Config" notecard contains one variable pertaining to Discord:
 
 # Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
 DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# Messages will appear to be from this user [Default: Discord IM Online Tracker]
-DISCORD_USER = Discord IM Online Tracker
 
 "DISCORD_URL" is simply the setting where you input your Webhook URL from Discord (see above). 
 
