@@ -1,41 +1,59 @@
 TARGET_UUID = target-avatar-uuid
 END_SETTINGS
-#
-# Optional settings, uncomment & move above END_SETTINGS to enable
-#
-# Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
-# DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-#
-# Enable or disable Instant Message notification to the owner [Default: TRUE]
-# IM_OWNER = TRUE
-#
-# Enable or disable display of hover text [Default: FALSE]
-# HOVER_TEXT = FALSE
-#
-# Override the displayed target name [Default: use display name]
-# DISPLAY_NAME = Target Avatar Display Name
-#
-# Time in seconds between online status checks [Default: 120.0]
-# CHECK_INTERVAL = 120.0
-#
-# Frame style, can be RGB or WOOD [default: WOOD]
-# FRAME_STYLE = RGB
-#
-# WOOD_ONLINE and WOOD_OFFLINE specify the texture names to use to indicate status.
-# Typically you would choose a darker texture for offline and lighter for online.
-# However, using the same lighter texture for both works well as a tint is applied.
-# If you want to style the frame with other textures just add them to the object
-# Contents and specify the texture names here. They don't have to be wood,
-#
-# Only used if FRAME_STYLE = WOOD. The textures must be in the object Contents.
-#
-# WOOD_ONLINE = Online-Oak
-# or
-# WOOD_ONLINE = Online-Polette
-#
-# WOOD_OFFLINE = Offline-Rosewood
-#
-# Use GLOW_ONLINE and GLOW_OFFLINE to set the glow status of the beveled frame sides
-# GLOW_ONLINE = 0.2
-#
-# GLOW_OFFLINE = 0.0
+##
+## Optional settings, set to desired value & move above END_SETTINGS to enable
+## NOTE: Nothing below END_SETTINGS is read.
+##         You can put anything in any format below END_SETTINGS, commented out or
+##         uncommented, it won't slow the script down or effect any behavior
+##
+## Specify an alternate profile pic by setting CUSTOM_PROFILE to the name of a texture in
+## the object's inventory or a valid texture UUID. [default: use target avatar profile pic]
+CUSTOM_PROFILE = uuid-or-name-of-texture
+##
+## Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
+DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+##
+## Enable or disable Instant Message notification to the owner [Default: TRUE]
+IM_OWNER = TRUE
+##
+## Enable or disable display of hover text [Default: FALSE]
+HOVER_TEXT = FALSE
+##
+## Override the displayed target name [Default: use display name]
+DISPLAY_NAME = Target Avatar Display Name
+##
+## Time in seconds between online status checks [Default: 120.0]
+CHECK_INTERVAL = 120.0
+##
+## Frame style, can be RGB or WOOD [default: WOOD]
+FRAME_STYLE = WOOD
+##
+## WOOD_ONLINE and WOOD_OFFLINE specify the texture names or UUID to use to indicate status.
+## Typically you would choose a darker texture for offline and lighter for online.
+## However, using the same lighter texture for both works well as a tint is applied.
+## If you want to style the frame with other textures just add them to the object
+## Contents and specify the texture names here. They don't have to be wood,
+##
+## These settings can also be a valid texture UUID rather than an inventory texture name
+##
+## Only used if FRAME_STYLE = WOOD. The textures must be in the object Contents.
+##
+WOOD_ONLINE = Online-Oak
+##
+WOOD_OFFLINE = Offline-Rosewood
+##
+## WOOD_TINT specifies if the beveled side textures should be tinted to further enhance status indication
+## Only used uf FRAME_STYLE = WOOD. Default is TRUE
+##
+WOOD_TINT = TRUE
+##
+## COL_ONLINE and COL_OFFLINE specify the color vectors used for tinting and to indicate status.
+##
+## Default vectors are green (online) and red (offline):
+COL_ONLINE = <0.180, 0.800, 0.251>
+COL_OFFLINE = <1.000, 0.255, 0.212>
+##
+## Use GLOW_ONLINE and GLOW_OFFLINE to set the glow status of the beveled frame sides
+GLOW_ONLINE = 0.2
+##
+GLOW_OFFLINE = 0.0

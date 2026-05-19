@@ -20,6 +20,7 @@
 // 16-May-2026 - Add setup instructions and prep for Marketplace
 // 17-May-2026 - Use embeds objects for Discord postings
 // 18-May-2026 - Format date/time, display last login/logoff in Discord messages
+// 19-May-2026 - Add support for customizing prim textures/colors/glow and pic
 //
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
@@ -44,11 +45,42 @@ integer lastLogin = 0;
 string  lastLoginStr = "";
 string  lastLogoffStr = "";
 
+// Built-in white texture UUID
+string WHT_UUID = "5748decc-f629-461c-9a36-a35a221fe21f";
+string D_COL;
+// Discord uses integer representation of hex color values
+string D_RED   = "16711680";
+string D_GRN   = "65280";
+
+// Common color vectors reference
+// ------------------------------
+// vector NAVY     = <0.000, 0.122, 0.247>;
+// vector BLUE     = <0.000, 0.455, 0.851>;
+// vector AQUA     = <0.498, 0.859, 1.000>;
+// vector TEAL     = <0.224, 0.800, 0.800>;
+// vector OLIVE    = <0.239, 0.600, 0.439>;
+// vector GREEN    = <0.180, 0.800, 0.251>;
+// vector LIME     = <0.004, 1.000, 0.439>;
+// vector YELLOW   = <1.000, 0.863, 0.000>;
+// vector ORANGE   = <1.000, 0.522, 0.106>;
+// vector RED      = <1.000, 0.255, 0.212>;
+// vector MAROON   = <0.522, 0.078, 0.294>;
+// vector FUCHSIA  = <0.941, 0.071, 0.745>;
+// vector PURPLE   = <0.694, 0.051, 0.788>;
+// vector WHITE    = <1.000, 1.000, 1.000>;
+// vector SILVER   = <0.867, 0.867, 0.867>;
+// vector GRAY     = <0.667, 0.667, 0.667>;
+// vector BLACK    = <0.067, 0.067, 0.067>;
+vector OFFLINE_COL = <1.000, 0.255, 0.212>;
+vector ONLINE_COL  = <0.180, 0.800, 0.251>;
+
 // Frame style and textures
-integer UseRGB = 0; 
-string  WoodOnline = "Online-Oak";
+string  customProfilePic = "";
+integer UseRGB      = 0; 
+integer TintSides   = 1;
+string  WoodOnline  = "Online-Oak";
 string  WoodOffline = "Offline-Rosewood";
-float   onlineGlow = 0.2;
+float   onlineGlow  = 0.2;
 float   offlineGlow = 0.0;
 
 integer IsOnline = FALSE; // Assume offline initially
@@ -67,60 +99,67 @@ key owner = NULL_KEY;
 key display_name_query;
 key name_query;
 
-// Built-in white texture UUID
-string WHT_UUID = "5748decc-f629-461c-9a36-a35a221fe21f";
-string D_COL;
-string D_RED = "16711680";
-string D_GRN = "65280";
-vector RED = <1,0,0>;
-vector GRN = <0,1,0>;
-
 string profileURL;
 string webprofURL;
 
-GetProfilePic(key id) //Run the HTTP Request then set the texture
-{
+GetProfilePic(key id) {
     string URL_RESIDENT = "https://world.secondlife.com/resident/";
     profileRequestID = llHTTPRequest(URL_RESIDENT + (string)id,[HTTP_METHOD,"GET"],"");
 }
 
-SetSideTextures(vector col) // Set the sides to the online status texture
-{
+SetSideTextures(vector col) { // Set the sides to the online status texture/color
     integer    i;
     integer    faces = llGetNumberOfSides();
-    vector     olive = <0.239, 0.600, 0.439>;
-    for (i = 0; i < faces; i++) {
-        if (i == 0) {
-            llSetColor(<1.0, 1.0, 1.0>, i);
-            if (col == RED) {
-                llSetPrimitiveParams([PRIM_FULLBRIGHT, i, FALSE]);
+
+    // The prim must be configured with face 0 as the profile pic
+    llSetColor(<1.0, 1.0, 1.0>, 0);
+    if (col == OFFLINE_COL) {
+        llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, FALSE]);
+    } else {
+        llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, TRUE]);
+    }
+    // Sides and back
+    for (i = 1; i < faces; i++) {
+        if (UseRGB) {
+            llSetTexture(WHT_UUID, i);
+            llSetColor(col, i);
+            if (col == OFFLINE_COL) {
+                llSetPrimitiveParams([PRIM_GLOW, i, offlineGlow]);
             } else {
-                llSetPrimitiveParams([PRIM_FULLBRIGHT, i, TRUE]);
+                llSetPrimitiveParams([PRIM_GLOW, i, onlineGlow]);
             }
         } else {
-            if (UseRGB) {
-                llSetTexture(WHT_UUID, i);
-                llSetColor(col, i);
+            if (col == OFFLINE_COL) {
+                llSetTexture(WoodOffline, i);
+                llSetPrimitiveParams([PRIM_GLOW, i, offlineGlow]);
             } else {
-                if (col == RED) {
-                    llSetTexture(WoodOffline, i);
-                    llSetColor(col, i);
-                    llSetPrimitiveParams([PRIM_GLOW, i, offlineGlow]);
-                } else {
-                    llSetTexture(WoodOnline, i);
-                    llSetColor(olive, i);
-                    llSetPrimitiveParams([PRIM_GLOW, i, onlineGlow]);
-                }
+                llSetTexture(WoodOnline, i);
+                llSetPrimitiveParams([PRIM_GLOW, i, onlineGlow]);
+            }
+            if (TintSides) {
+                llSetColor(col, i);
             }
         }
     }
 }
 
-SetDefaultTextures() // Set the sides to their default textures
-{
+SetDefaultTextures() { // Set the sides to their default textures
     // Color the root prim red
     llSetTexture(WHT_UUID, ALL_SIDES);
-    llSetColor(RED, ALL_SIDES);
+    llSetColor(OFFLINE_COL, ALL_SIDES);
+}
+
+integer IsVector(string s) {
+    // Split the string into components using common delimiters
+    list split = llParseString2List(s, [" "], ["<", ">", ","]);
+
+    // Valid vectors must have at least 7 parts: <, x, ,, y, ,, z, >
+    if(llGetListLength(split) != 7) return FALSE;
+
+    // Flip the sign of the Z component. If the string is valid, the
+    // resulting vector will NOT match the original. If it's invalid,
+    // both will fail to ZERO_VECTOR and thus match.
+    return !((string)((vector)s) == (string)((vector)((string)llListInsertList(split, ["-"], 5))));
 }
 
 profile_timer_init() {
@@ -132,7 +171,11 @@ profile_timer_init() {
     }
     llSetObjectName(TargetDisplayName + " Online Tracker");
     llSetObjectDesc("Sends an IM or Discord message when " + TargetDisplayName + " logs on or off");
-    GetProfilePic(TargetUuid);
+    if (customProfilePic == "") {
+        GetProfilePic(TargetUuid);
+    } else {
+        llSetTexture(customProfilePic, 0);
+    }
     // Start monitoring immediately
     llSetTimerEvent(CheckInterval);
     // Do an initial check immediately
@@ -187,8 +230,7 @@ string ConvertToAmPm(string time24) {
 }
 
 // Convert Unix Time to SLT, identifying whether it is currently PST or PDT (i.e. Daylight Saving aware)
-string Unix2SLT(integer insecs)
-{
+string Unix2SLT(integer insecs) {
     string str = Convert(insecs - (3600 * 8) );   // PST is 8 hours behind GMT
     if (llGetSubString(str, -3, -1) == "PDT")     // if the result indicates Daylight Saving Time ...
         str = Convert(insecs - (3600 * 7) );      // ... Recompute at 1 hour later
@@ -201,19 +243,16 @@ string Unix2SLT(integer insecs)
 }
 
 // This leap year test is correct for all years from 1901 to 2099 and hence is quite adequate for Unix Time computations
-integer LeapYear(integer year)
-{
+integer LeapYear(integer year) {
     return !(year & 3);
 }
 
-integer DaysPerMonth(integer year, integer month)
-{
+integer DaysPerMonth(integer year, integer month) {
     if (month == 2)      return 28 + LeapYear(year);
     return 30 + ( (month + (month > 7) ) & 1);           // Odd months up to July, and even months after July, have 31 days
 }
 
-string Convert(integer insecs)
-{
+string Convert(integer insecs) {
     integer w; integer month; integer daysinyear;
     integer mins = insecs / 60;
     integer secs = insecs % 60;
@@ -267,8 +306,7 @@ string Convert(integer insecs)
 }
 
 // Input number of seconds, return a string with Days, Hours, Minutes, Seconds
-string getElapsedTime(integer secs)
-{
+string getElapsedTime(integer secs) {
     string timeStr;
     integer days;
     integer hours;
@@ -390,8 +428,7 @@ sendToDiscord(string dm, string et, integer ols, string time) {
     // But straight up JSON is faster although less readable
 }
 
-default
-{
+default {
     on_rez(integer param) {
         llResetScript();
     }
@@ -438,7 +475,7 @@ default
         // Requested data contains the string "0" or "1" for DATA_ONLINE
         // Convert it to an integer and use the boolean as index
         // list index = [   0,       1,     2(0+2), 3(1+2)  ]
-        list stat_cols = ["OFFLINE","ONLINE",RED,GRN];
+        list stat_cols = ["OFFLINE","ONLINE",OFFLINE_COL,ONLINE_COL];
         string status_pre = TargetDisplayName + " is now ";
         string status_msg = "";
 
@@ -539,6 +576,16 @@ default
                     if (value == "FALSE") value = "0";
                     if (name == "TARGET_UUID") {
                         TargetUuid = (key)value;
+                    } else if (name == "CUSTOM_PROFILE") {
+                        // Check if this is the name of a texture in the prim inventory or a valid UUID
+                        if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
+                            customProfilePic = value;
+                        } else {
+                            // Is it a valid UUID ?
+                            if ((key)value) {
+                                customProfilePic = value;
+                            }
+                        }
                     } else if (name == "DISPLAY_NAME") {
                         TargetDisplayName = value;
                         GetDisplayName = FALSE;
@@ -561,13 +608,35 @@ default
                         } else {
                             UseRGB = 1; 
                         }
+                    } else if (name == "COL_ONLINE") {
+                        if (IsVector(value)) {
+                            ONLINE_COL = (vector)value;
+                        }
+                    } else if (name == "COL_OFFLINE") {
+                        if (IsVector(value)) {
+                            OFFLINE_COL = (vector)value;
+                        }
+                    } else if (name == "WOOD_TINT") {
+                        TintSides = (integer)value;
                     } else if (name == "WOOD_ONLINE") {
+                        // Check if this is the name of a texture in the prim inventory or a valid UUID
                         if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
                             WoodOnline = value;
+                        } else {
+                            // Is it a valid UUID ?
+                            if ((key)value) {
+                                WoodOnline = value;
+                            }
                         }
                     } else if (name == "WOOD_OFFLINE") {
+                        // Check if this is the name of a texture in the prim inventory or a valid UUID
                         if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
                             WoodOffline = value;
+                        } else {
+                            // Is it a valid UUID ?
+                            if ((key)value) {
+                                WoodOffline = value;
+                            }
                         }
                     }
                 }

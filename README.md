@@ -11,8 +11,8 @@ See [https://online.neoman.dev](https://online.neoman.dev) for full documentatio
 - [LICENSE](#license)
 - [RELEASES](#releases)
 - [SETUP STEPS](#setup-steps)
+- [CONFIGURATION](#configuration)
 - [CHANGING THE TRACKED AVATAR](#changing-the-tracked-avatar)
-- [DEFAULT CONTENTS OF Target_Config NOTECARD](#default-contents-of-target_config-notecard)
 - [DISCORD SETUP](#discord-setup)
 - [FEEDBACK](#feedback)
 
@@ -26,11 +26,18 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
     - Post a message to a Discord Channel
     - Display as hover text over the object
     - Send a message to the owner in local chat
-- Elapsed time between login/logout is displayed as well as the login/logout times
 - The tracked Avatar need not be in the same region, grid-wide tracking is performed
+- Elapsed time between login/logout is displayed as well as the login/logout times
+- Previous login/logout times are displayed
 - The online status of the configured Avatar is indicated by the object's border color, red or green
 - The online status messages contain a clickable link to the Avatar's profile
+- Online status notifications can be monitored when you are offline if Discord is configured
 - The frequency of Online status updates can be configured [Default: every 2 minutes]
+- The in-world object is a beveled frame displaying the tracked Avatar's profile pic and online status
+- The beveled frame can be customized in several ways
+    - A custom picture can be configured rather than the Avatar's profile pic
+    - Custom textures or texture UUIDs can be provided to texture the bevels on the frame
+    - Glow and color of the frame bevels can be customized
 - The owner can touch the object to force a status update and toggle hover text display
 - Optimized low lag script and only a single prim
 - Open Source, GPL Version 3 licensed script, view the source on [Github](https://github.com/missyrestless/OnlineTracker)
@@ -104,6 +111,76 @@ You can repeat this process for as many Avatars as you wish to track, one Avatar
 
 Each rezzed online tracker object will rename itself with the tracked Avatar display name in its object name.
 
+## CONFIGURATION
+
+The rezzed `Discord IM Online Tracker` object can be configured and customized by editing
+the `Target_Config` notecard in the object's inventory Contents. The only required setting
+in this notecard is `TARGET_UUID` and the default settings for all other configuration
+parameters should work well. However, if you wish to customize the object and its behavior
+you can do so in a variety of ways:
+
+- Set an alternate picture to use on the main face of the prim with `CUSTOM_PROFILE`
+    - Drag and drop a texture to use into the object's Contents and set to the texture name
+    - Or set this to a valid texture UUID
+    - If not set then the target avatar's profile pic is used
+- Set the Discord channel Webhook URL with `DISCORD_URL`
+    - See the section [DISCORD SETUP](#discord-setup) below
+    - If not set then no Discord messages are delivered, only IM to owner or local chat to owner
+- Enable or disable IM notifications to owner with `IM_OWNER`
+    - Set to `TRUE` to enable or `FALSE` to disable
+    - If not set then the default behavior is IM notifications to owner are enabled
+- Enable or disable hover text display on startup with `HOVER_TEXT`
+    - Set to `TRUE` to enable hover text on startup or `FALSE` to disable
+    - Regardless of setting, hover text display can be toggled by clicking the object
+    - If not set then the default behavior is hover text on startup is disabled
+- Set the target avatar display name to use with `DISPLAY_NAME`
+    - Notification messages will refer to the target avatar by this name
+    - If not set then the target avatar's display name is used
+- Set the interval, in seconds, between online status checks with `CHECK_INTERVAL`
+    - Custom setting for this parameter should be a value greater than or equal to 60
+    - If not set then the interval between checks is 120 seconds (2 minutes)
+    - Note: the interval between status checks may take longer due to delays in the request
+- Set the frame style with `FRAME_STYLE`
+    - The object is a beveled frame and the sides are textured and colored to indicate status
+    - Currently two frame styles are supported, `RGB` and `WOOD`, and can be configured with this setting
+    - If not set then the default frame style is `WOOD`. Set to `RGB` to use colors rather than textures.
+- Set the online texture to use for `WOOD` frame style with `WOOD_ONLINE`
+    - This setting can be the name of a texture in the object's inventory or a valid texture UUID
+    - If not set then the `Online-Oak` texture is used to indicate online status
+- Set the offline texture to use for `WOOD` frame style with `WOOD_OFFLINE`
+    - This setting can be the name of a texture in the object's inventory or a valid texture UUID
+    - If not set then the `Offline-Rosewood` texture is used to indicate offline status
+- Enable or disable tinting of side textures with `WOOD_TINT`
+    - Set to `TRUE` to enable tinting or `FALSE` to disable
+    - If not set then tinting is enabled
+- Set the color vector to use for tinting the sides to indicate online with `COL_ONLINE`
+    - This setting must be a valid color vector
+    - If not set then `<0.180, 0.800, 0.251>` is used to indicate online status
+- Set the color vector to use for tinting the sides to indicate offline with `COL_OFFLINE`
+    - This setting must be a valid color vector
+    - If not set then `<1.000, 0.255, 0.212>` is used to indicate offline status
+- Set the online glow status with `GLOW_ONLINE`
+    - The value should be a floating decimal between 0 and 1
+    - If not set then the online glow status is set to `0.2`
+- Set the offline glow status with `GLOW_OFFLINE`
+    - The value should be a floating decimal between 0 and 1
+    - If not set then the offline glow status is set to `0.0`
+
+### Default Target_Config notecard
+
+The initial settings in the `Target_Config` notecard only set the `TARGET_UUID` to the dummy
+value of `target-avatar-uuid`. All other settings use their default values as described above.
+This dummy `TARGET_UUID` will result in the object tracking the online status of its owner.
+
+Set `TARGET_UUID` to a valid avatar UUID to configure tracking. This is the only setting that is required.
+
+Default `Target_Config` notecard:
+
+```bash
+TARGET_UUID = target-avatar-uuid
+END_SETTINGS
+```
+
 ## CHANGING THE TRACKED AVATAR
 
 To change the tracked Avatar of an existing and already configured Discord IM Online Tracker, edit the object and change the TARGET_UUID setting in the Target_Config notecard.
@@ -121,52 +198,6 @@ To change the tracked Avatar of an existing and already configured Discord IM On
 ### Save the Target_Config notecard and close the Edit window
 
 The Discord IM Online Tracker will detect the change and reset, tracking the new Avatar's online status
-
-## DEFAULT CONTENTS OF Target_Config NOTECARD
-
-```bash
-# Only the tracked Avatar UUID is required, all other configuration settings are optional
-TARGET_UUID = target-avatar-uuid
-END_SETTINGS
-#
-# Optional settings, uncomment & move above END_SETTINGS to enable
-#
-# Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
-# DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-#
-# Enable or disable Instant Message notification to the owner [Default: TRUE]
-# IM_OWNER = TRUE
-#
-# Enable or disable display of hover text [Default: FALSE]
-# HOVER_TEXT = FALSE
-#
-# Override the displayed target name [Default: use display name]
-# DISPLAY_NAME = Target Avatar Display Name
-#
-# Time in seconds between online status checks [Default: 120.0]
-# CHECK_INTERVAL = 120.0
-#
-# Frame style, can be RGB or WOOD [default: WOOD]
-# FRAME_STYLE = RGB
-#
-# WOOD_ONLINE and WOOD_OFFLINE specify the texture names to use to indicate status.
-# Typically you would choose a darker texture for offline and lighter for online.
-# If you want to style the frame with other textures just add them to the object
-# Contents and specify the texture names here. They don't have to be wood,
-#
-# Only used if FRAME_STYLE = WOOD. The textures must be in the object Contents.
-#
-# WOOD_ONLINE = Online-Oak
-# or
-# WOOD_ONLINE = Online-Polette
-#
-# WOOD_OFFLINE = Offline-Rosewood
-#
-# Use GLOW_ONLINE and GLOW_OFFLINE to set the glow status of the beveled frame sides
-# GLOW_ONLINE = 0.2
-#
-# GLOW_OFFLINE = 0.0
-```
 
 ## DISCORD SETUP
 
