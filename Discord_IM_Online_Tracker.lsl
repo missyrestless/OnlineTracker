@@ -45,10 +45,11 @@ string  lastLoginStr = "";
 string  lastLogoffStr = "";
 
 // Frame style and textures
-integer UseRGB = 1; 
+integer UseRGB = 0; 
 string  WoodOnline = "Online-Oak";
 string  WoodOffline = "Offline-Rosewood";
-float glow = 0.1;
+float   onlineGlow = 0.2;
+float   offlineGlow = 0.0;
 
 integer IsOnline = FALSE; // Assume offline initially
 integer GetDisplayName = TRUE;
@@ -87,6 +88,7 @@ SetSideTextures(vector col) // Set the sides to the online status texture
 {
     integer    i;
     integer    faces = llGetNumberOfSides();
+    vector     olive = <0.239, 0.600, 0.439>;
     for (i = 0; i < faces; i++) {
         if (i == 0) {
             llSetColor(<1.0, 1.0, 1.0>, i);
@@ -98,15 +100,18 @@ SetSideTextures(vector col) // Set the sides to the online status texture
         } else {
             if (UseRGB) {
                 llSetTexture(WHT_UUID, i);
+                llSetColor(col, i);
             } else {
                 if (col == RED) {
                     llSetTexture(WoodOffline, i);
+                    llSetColor(col, i);
+                    llSetPrimitiveParams([PRIM_GLOW, i, offlineGlow]);
                 } else {
                     llSetTexture(WoodOnline, i);
+                    llSetColor(olive, i);
+                    llSetPrimitiveParams([PRIM_GLOW, i, onlineGlow]);
                 }
             }
-            llSetColor(col, i);
-            llSetPrimitiveParams([PRIM_GLOW, i, glow]);
         }
     }
 }
@@ -236,8 +241,11 @@ string Convert(integer insecs)
         days -= w;
         w = DaysPerMonth(years, ++month);
     }
-    string str =  ((string) years + "-" + llGetSubString ("0" + (string) month, -2, -1) + "-" + llGetSubString ("0" + (string) days, -2, -1) + " " +
-	llGetSubString ("0" + (string) hours, -2, -1) + ":" + llGetSubString ("0" + (string) mins, -2, -1) );
+    string str =  ((string) years + "-" +
+        llGetSubString("0" + (string) month, -2, -1) + "-" +
+        llGetSubString("0" + (string) days, -2, -1) + " " +
+        llGetSubString ("0" + (string) hours, -2, -1) + ":" +
+        llGetSubString ("0" + (string) mins, -2, -1) );
 
     integer LastSunday = days - DayOfWeek;
     string PST_PDT = " PST";                  // start by assuming Pacific Standard Time
@@ -536,8 +544,10 @@ default
                         GetDisplayName = FALSE;
                     } else if (name == "CHECK_INTERVAL") {
                         CheckInterval = (float)value; 
-                    } else if (name == "GLOW") {
-                        glow = (float)value; 
+                    } else if (name == "GLOW_ONLINE") {
+                        onlineGlow = (float)value; 
+                    } else if (name == "GLOW_OFFLINE") {
+                        offlineGlow = (float)value; 
                     } else if (name == "HOVER_TEXT") {
                         HoverText = (integer)value; 
                     } else if (name == "DISCORD_URL") {
@@ -546,8 +556,11 @@ default
                     } else if (name == "IM_OWNER") {
                         IMowner = (integer)value; 
                     } else if (name == "FRAME_STYLE") {
-                        if ((value == "WOOD") || (value == "wood"))
+                        if ((value == "WOOD") || (value == "wood")) {
                             UseRGB = 0; 
+                        } else {
+                            UseRGB = 1; 
+                        }
                     } else if (name == "WOOD_ONLINE") {
                         if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
                             WoodOnline = value;

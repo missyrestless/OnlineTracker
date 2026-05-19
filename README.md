@@ -146,7 +146,7 @@ END_SETTINGS
 # Time in seconds between online status checks [Default: 120.0]
 # CHECK_INTERVAL = 120.0
 #
-# Frame style, can be RGB or WOOD [default: RGB]
+# Frame style, can be RGB or WOOD [default: WOOD]
 # FRAME_STYLE = RGB
 #
 # WOOD_ONLINE and WOOD_OFFLINE specify the texture names to use to indicate status.
