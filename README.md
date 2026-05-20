@@ -39,6 +39,7 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
     - Custom textures or texture UUIDs can be provided to texture the bevels on the frame
     - Glow and color of the frame bevels can be customized
 - The owner can touch the object to force a status update and toggle hover text display
+- Mouse hover over the in-world object will display the online status in the object description
 - Optimized low lag script and only a single prim
 - Open Source, GPL Version 3 licensed script, view the source on [Github](https://github.com/missyrestless/OnlineTracker)
 

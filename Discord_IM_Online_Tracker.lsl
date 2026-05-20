@@ -30,6 +30,8 @@ string TargetDisplayName = "";
 // How often to check in seconds (60s minimum recommended)
 float CheckInterval = 120.0; 
 // ---------------------
+string onlineStatus = "Unknown";
+string objectDescription;
 // Default fallback if not set in configuration notecard or owner
 key Default_Uuid = "094743dc-cb00-483f-9c35-99232e3a71f1";
 
@@ -170,7 +172,8 @@ profile_timer_init() {
         llSetText("", <0,0,0>, 0.0);
     }
     llSetObjectName(TargetDisplayName + " Online Tracker");
-    llSetObjectDesc("Sends an IM or Discord message when " + TargetDisplayName + " logs on or off");
+    objectDescription = TargetDisplayName + " is " + onlineStatus;
+    llSetObjectDesc(objectDescription);
     if (customProfilePic == "") {
         GetProfilePic(TargetUuid);
     } else {
@@ -487,7 +490,13 @@ default {
             string status_pre = TargetDisplayName + " is now ";
             string status_msg = "";
             // Set hover text status and color
-            string stats = llList2String(stat_cols, CurrentlyOnline);   // boolean/index = 0   or 1
+            onlineStatus = llList2String(stat_cols, CurrentlyOnline);   // boolean/index = 0   or 1
+
+            // Set the object description to the online status if it has changed
+            objectDescription = TargetDisplayName + " is " + onlineStatus;
+            if (llGetObjectDesc() != objectDescription) {
+                llSetObjectDesc(objectDescription);
+            }
             vector color = llList2Vector(stat_cols, CurrentlyOnline+2); // boolean/index = 0+2 or 1+2
             SetSideTextures(color);
 
@@ -552,7 +561,7 @@ default {
             }
             // Set hover text
             if (HoverText) {
-              llSetText(TargetDisplayName + "\nStatus: " + stats, color, 1.0); // Update hover text and color
+              llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, color, 1.0); // Update hover text and color
             }
 
             // Update status
