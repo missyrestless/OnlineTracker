@@ -16,6 +16,10 @@ DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ## Enable or disable Instant Message notification to the owner [Default: TRUE]
 IM_OWNER = TRUE
 ##
+## Enable or disable restriction of notificatiions to owner [Default: TRUE]
+## If FALSE non-owner users can click the object to get an online status message in local chat
+OWNER_ONLY = TRUE
+##
 ## Enable or disable display of hover text [Default: FALSE]
 HOVER_TEXT = FALSE
 ##

@@ -1,7 +1,10 @@
 * DONE Add support for display of previous login/logoff
 * DONE Add support for custom image instead of profile pic
 * DONE Set description to online status
-- Find better textures and metal or other texture types
+* DONE Add OWNER_ONLY config boolean to allow non-owners to click and get a status message
+* DONE Always IM owner with online status when touched
+  * DONE Create a new touch handler and abstract the current event handler out to reuse as a function
+* DONE Find better textures and metal or other texture types
 - Add support for tracking multiple avatars in a linked prim set
 - Use QuickChart or similar to generate graphs of online status over time
   - https://quickchart.io/documentation/send-charts-discord-bot/

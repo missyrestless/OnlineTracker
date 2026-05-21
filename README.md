@@ -130,6 +130,9 @@ you can do so in a variety of ways:
 - Enable or disable IM notifications to owner with `IM_OWNER`
     - Set to `TRUE` to enable or `FALSE` to disable
     - If not set then the default behavior is IM notifications to owner are enabled
+- Enable or disable restriction of notifications to owner with `OWNER_ONLY`
+    - If `FALSE` non-owner users can click the object to get an online status message in local chat
+    - If not set then the default behavior is restrict notifications to owner
 - Enable or disable hover text display on startup with `HOVER_TEXT`
     - Set to `TRUE` to enable hover text on startup or `FALSE` to disable
     - Regardless of setting, hover text display can be toggled by clicking the object

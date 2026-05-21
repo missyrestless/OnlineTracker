@@ -35,7 +35,11 @@ string objectDescription;
 // Default fallback if not set in configuration notecard or owner
 key Default_Uuid = "094743dc-cb00-483f-9c35-99232e3a71f1";
 
-// Key for agent data requests
+// Key for touch agent data requests
+key touchDataRequestID = NULL_KEY;
+// Key for user touch
+key detectedKey        = NULL_KEY;
+// Key for timer agent data requests
 key agentDataRequestID = NULL_KEY;
 // Keys for HTTP requests
 key discordRequestID = NULL_KEY;
@@ -75,6 +79,7 @@ string D_GRN   = "65280";
 // vector BLACK    = <0.067, 0.067, 0.067>;
 vector OFFLINE_COL = <1.000, 0.255, 0.212>;
 vector ONLINE_COL  = <0.180, 0.800, 0.251>;
+vector WHITE       = <1.000, 1.000, 1.000>;
 
 // Frame style and textures
 string  customProfilePic = "";
@@ -85,12 +90,14 @@ string  WoodOffline = "Offline-Rosewood";
 float   onlineGlow  = 0.2;
 float   offlineGlow = 0.0;
 
-integer IsOnline = FALSE; // Assume offline initially
+integer IsOnline = -1; // Indicates uninitialized online status
 integer GetDisplayName = TRUE;
 integer HoverText = FALSE;
 integer NotecardLine;
 // Should online status be sent to owner as an Instant Message
 integer IMowner = TRUE;
+// Should online status messages be restricted to owner
+integer ownerOnly = TRUE;
 // Should online status be broadcast to a Discord channel
 integer DiscordRelay = FALSE;
 string  Discord_URL = "";
@@ -114,7 +121,6 @@ SetSideTextures(vector col) { // Set the sides to the online status texture/colo
     integer    faces = llGetNumberOfSides();
 
     // The prim must be configured with face 0 as the profile pic
-    llSetColor(<1.0, 1.0, 1.0>, 0);
     if (col == OFFLINE_COL) {
         llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, FALSE]);
     } else {
@@ -146,9 +152,14 @@ SetSideTextures(vector col) { // Set the sides to the online status texture/colo
 }
 
 SetDefaultTextures() { // Set the sides to their default textures
-    // Color the root prim red
     llSetTexture(WHT_UUID, ALL_SIDES);
-    llSetColor(OFFLINE_COL, ALL_SIDES);
+    if (TintSides) {
+        // Set face 0 color to white
+        llSetColor(WHITE, 0);
+    } else {
+        // Set all faces color to white
+        llSetColor(WHITE, ALL_SIDES);
+    }
 }
 
 integer IsVector(string s) {
@@ -166,7 +177,7 @@ integer IsVector(string s) {
 
 profile_timer_init() {
     if (HoverText) {
-        llSetText(TargetDisplayName + "\nChecking status...", <1.0, 1.0, 1.0>, 1.0); // Initial hover text
+        llSetText(TargetDisplayName + "\nChecking status...", WHITE, 1.0); // Initial hover text
     } else {
         // Clear any previously set hover text
         llSetText("", <0,0,0>, 0.0);
@@ -436,9 +447,9 @@ default {
         llResetScript();
     }
 
-    state_entry()
-    {
+    state_entry() {
         owner = llGetOwner();
+        IsOnline = -1; // Indicates uninitialized online status
         lastLogoff = 0;
         lastLogin = 0;
         lastLogoffStr = "";
@@ -453,27 +464,44 @@ default {
         }
     }
 
-    timer()
-    {
+    timer() {
         // Periodically check status
         agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
     }
 
-    // Allows a touch to force an immediate update
-    touch_start(integer num) {
+    touch_start(integer total_number) {
+        // Start the timer when the user clicks
+        llResetTime();
+    }
+
+    touch_end(integer num_touch) {
         // Check if the first person who touched is the owner
-        if (llDetectedKey(0) == owner) {
-            if (HoverText) {
-                // Clears the hover text, sets color to black, and makes it 100% transparent
-                llSetText("", <0.0, 0.0, 0.0>, 0.0);
+        detectedKey = llDetectedKey(0);
+        if (detectedKey == owner) {
+            // Check how long the user held the click
+            float held_time = llGetTime();
+
+            if (held_time > 2.0) {
+                // Execute this if the click was held
+                // TODO: bring up a dialog menu with configuration options
+                //       e.g. Frame texture, Glow, Tint on/off, Size, Hover text on/off
+                // For now just toggle Hover text display
+                if (HoverText) {
+                    // Clears the hover text, sets color to black, and makes it 100% transparent
+                    llSetText("", <0.0, 0.0, 0.0>, 0.0);
+                }
+                HoverText = !HoverText;
             }
-            HoverText = !HoverText;
-            agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+            // Send a touch request for online status
+            touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+        } else {
+            if (!ownerOnly) {
+                touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+            }
         }
     }
 
-    dataserver(key queryid, string data)
-    {
+    dataserver(key queryid, string data) {
         integer CurrentlyOnline;
         // Requested data contains the string "0" or "1" for DATA_ONLINE
         // Convert it to an integer and use the boolean as index
@@ -482,7 +510,7 @@ default {
         string status_pre = TargetDisplayName + " is now ";
         string status_msg = "";
 
-        if (queryid == agentDataRequestID) {
+        if ((queryid == agentDataRequestID) || (queryid == touchDataRequestID)) {
             CurrentlyOnline = (integer)data;
 
             string elapsedTimeStr;
@@ -500,9 +528,18 @@ default {
             vector color = llList2Vector(stat_cols, CurrentlyOnline+2); // boolean/index = 0+2 or 1+2
             SetSideTextures(color);
 
+            // Force an online status report the first time through when IsOnline is uninitialized
+            if (IsOnline == -1) {
+                if (CurrentlyOnline) {
+                    IsOnline = FALSE;
+                } else {
+                    IsOnline = TRUE;
+                }
+            }
+
             // IM if status has changed
             if (CurrentlyOnline) {
-                if (!IsOnline) {
+                if ((!IsOnline) || (queryid == touchDataRequestID)) {
                     status_pre = status_pre + "ONLINE. Click to view profile: ";
                     status_msg = status_pre + profileURL;
                     lastLogin = llGetUnixTime();
@@ -513,8 +550,13 @@ default {
                         elapsedTimeStr = getElapsedTime(lastLogin - lastLogoff);
                         status_msg = status_msg + "\n(Offline for " + elapsedTimeStr + ")";
                     }
-                    if (!(DiscordRelay || IMowner)) {
-                        llOwnerSay(status_msg);
+                    if ((!(DiscordRelay || IMowner)) || (queryid == touchDataRequestID)) {
+                        if (ownerOnly) {
+                            llOwnerSay(status_msg);
+                        } else {
+                            // send a message to the chat window of the avatar touching
+                            llRegionSayTo(detectedKey, 0, status_msg);
+                        }
                     } else {
                         if (IMowner) {
                             llInstantMessage(owner, status_msg);
@@ -528,11 +570,12 @@ default {
                             sendToDiscord(status_msg, "Offline for " + elapsedTimeStr, 1, timeStamp);
                         }
                     }
-                    lastLoginStr = Unix2SLT(llGetUnixTime());
+                    if (!IsOnline) {
+                        lastLoginStr = Unix2SLT(llGetUnixTime());
+                    }
                 }
-            }
-            else {
-                if (IsOnline) {
+            } else {
+                if ((IsOnline) || (queryid == touchDataRequestID)) {
                     status_msg = status_pre + "OFFLINE.";
                     lastLogoff = llGetUnixTime();
                     if (lastLogin <= 0) {
@@ -541,8 +584,13 @@ default {
                     } else {
                         elapsedTimeStr = getElapsedTime(lastLogoff - lastLogin);
                     }
-                    if (!(DiscordRelay || IMowner)) {
-                        llOwnerSay(status_msg);
+                    if ((!(DiscordRelay || IMowner)) || (queryid == touchDataRequestID)) {
+                        if (ownerOnly) {
+                            llOwnerSay(status_msg);
+                        } else {
+                            // send a message to the chat window of the avatar touching
+                            llRegionSayTo(detectedKey, 0, status_msg);
+                        }
                     } else {
                         if (IMowner) {
                             llInstantMessage(owner, status_msg);
@@ -556,7 +604,9 @@ default {
                             sendToDiscord(status_msg, "Online for " + elapsedTimeStr, 0, timeStamp);
                         }
                     }
-                    lastLogoffStr = Unix2SLT(llGetUnixTime());
+                    if (IsOnline) {
+                        lastLogoffStr = Unix2SLT(llGetUnixTime());
+                    }
                 }
             }
             // Set hover text
@@ -611,6 +661,8 @@ default {
                         DiscordRelay = TRUE;
                     } else if (name == "IM_OWNER") {
                         IMowner = (integer)value; 
+                    } else if (name == "OWNER_ONLY") {
+                        ownerOnly = (integer)value; 
                     } else if (name == "FRAME_STYLE") {
                         if ((value == "WOOD") || (value == "wood")) {
                             UseRGB = 0; 
@@ -664,15 +716,13 @@ default {
         }
     }
 
-    changed(integer change)
-    {
+    changed(integer change) {
          if (change & (CHANGED_OWNER | CHANGED_INVENTORY)) {
              llResetScript();
          }
     }
 
-    http_response(key req,integer status, list met, string body)
-    {
+    http_response(key req,integer status, list met, string body) {
         if (req == discordRequestID) {
             discordRequestID = NULL_KEY;
             if (status != 200 && status != 204) // Discord returns 204 No Content on success
