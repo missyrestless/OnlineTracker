@@ -22,6 +22,8 @@
 // 18-May-2026 - Format date/time, display last login/logoff in Discord messages
 // 19-May-2026 - Add support for customizing prim textures/colors/glow and pic
 //
+// VARIABLES
+//
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
 // Name of the avatar to track
@@ -110,7 +112,9 @@ key name_query;
 
 string profileURL;
 string webprofURL;
-
+// END VARIABLES
+//
+// FUNCTIONS
 GetProfilePic(key id) {
     string URL_RESIDENT = "https://world.secondlife.com/resident/";
     profileRequestID = llHTTPRequest(URL_RESIDENT + (string)id,[HTTP_METHOD,"GET"],"");
@@ -385,7 +389,7 @@ string getElapsedTime(integer secs) {
 sendToDiscord(string dm, string et, integer ols, string time) {
     string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
     string docURL = "https://online.neoman.dev/";
-    string repURL = "https://github.com/missyrestless/OnlineTracker";
+    string repURL = "https://marketplace.secondlife.com/p/Discord-IM-Online-Tracker/28289130";
     // Images
     string otrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
     // string icoURL = otrURL + "/refs/heads/main/images/online_icon.png";
@@ -404,7 +408,7 @@ sendToDiscord(string dm, string et, integer ols, string time) {
                     "\"title\": \"" + dm + "  (click to view profile)\", " +
                     "\"url\": \"" + webprofURL + "\", " +
                     "\"description\": \"" + et + "\\n\\n🤔 [Online Tracker Documentation](" +
-                        docURL + ")\\n👩 [Online Tracker Github Repository](" + repURL + ")\", " +
+                        docURL + ")\\n👩 [Second Life Marketplace Listing](" + repURL + ")\", " +
                     "\"color\": \"" + D_COL + "\", " +
                     "\"timestamp\": \"" + time + "\", " +
                     "\"footer\": { \"text\": \"" + ftrTXT + "\", " +
@@ -441,7 +445,9 @@ sendToDiscord(string dm, string et, integer ols, string time) {
     //
     // But straight up JSON is faster although less readable
 }
-
+// END FUNCTIONS
+//
+// STATES & EVENT HANDLERS
 default {
     on_rez(integer param) {
         llResetScript();
@@ -548,7 +554,10 @@ default {
                         elapsedTimeStr = "unknown time";
                     } else {
                         elapsedTimeStr = getElapsedTime(lastLogin - lastLogoff);
-                        status_msg = status_msg + "\n(Offline for " + elapsedTimeStr + ")";
+                        if (lastLoginStr != "") {
+                            elapsedTimeStr = elapsedTimeStr + "\nPrevious login: " + lastLoginStr;
+                        }
+                        status_msg = status_msg + "\nOffline for " + elapsedTimeStr;
                     }
                     if ((!(DiscordRelay || IMowner)) || (queryid == touchDataRequestID)) {
                         if (ownerOnly) {
@@ -562,11 +571,10 @@ default {
                             llInstantMessage(owner, status_msg);
                         }
                         if (DiscordRelay) {
-                            status_msg = "**" + TargetDisplayName + "** is now **ONLINE**";
-                            if (lastLoginStr != "") {
-                                elapsedTimeStr = elapsedTimeStr + "\\nPrevious login: " + lastLoginStr;
-                            }
                             D_COL = D_GRN;
+                            status_msg = "**" + TargetDisplayName + "** is now **ONLINE**";
+                            // IM and llOwnerSay use \n for a newline, Discord needs \\n. Sheesh.
+                            elapsedTimeStr = llReplaceSubString(elapsedTimeStr, "\nPrevious", "\\nPrevious", -1);
                             sendToDiscord(status_msg, "Offline for " + elapsedTimeStr, 1, timeStamp);
                         }
                     }
@@ -583,6 +591,9 @@ default {
                         elapsedTimeStr = "unknown time";
                     } else {
                         elapsedTimeStr = getElapsedTime(lastLogoff - lastLogin);
+                        if (lastLogoffStr != "") {
+                            elapsedTimeStr = elapsedTimeStr + "\nPrevious logoff: " + lastLogoffStr;
+                        }
                     }
                     if ((!(DiscordRelay || IMowner)) || (queryid == touchDataRequestID)) {
                         if (ownerOnly) {
@@ -596,11 +607,10 @@ default {
                             llInstantMessage(owner, status_msg);
                         }
                         if (DiscordRelay) {
-                            status_msg = "**" + TargetDisplayName + "** is now **OFFLINE**";
-                            if (lastLogoffStr != "") {
-                                elapsedTimeStr = elapsedTimeStr + "\\nPrevious logoff: " + lastLogoffStr;
-                            }
                             D_COL = D_RED;
+                            status_msg = "**" + TargetDisplayName + "** is now **OFFLINE**";
+                            // IM and llOwnerSay use \n for a newline, Discord needs \\n. Sheesh.
+                            elapsedTimeStr = llReplaceSubString(elapsedTimeStr, "\nPrevious", "\\nPrevious", -1);
                             sendToDiscord(status_msg, "Online for " + elapsedTimeStr, 0, timeStamp);
                         }
                     }
