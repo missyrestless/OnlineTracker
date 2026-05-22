@@ -29,27 +29,27 @@ DISPLAY_NAME = Target Avatar Display Name
 ## Time in seconds between online status checks [Default: 120.0]
 CHECK_INTERVAL = 120.0
 ##
-## Frame style, can be RGB or WOOD [default: WOOD]
-FRAME_STYLE = WOOD
+## Frame style, can be RGB, or Texture [default: Texture]
+FRAME_STYLE = Texture
 ##
-## WOOD_ONLINE and WOOD_OFFLINE specify the texture names or UUID to use to indicate status.
+## TEXTURE_ONLINE and TEXTURE_OFFLINE specify the texture names or UUID to use to indicate status.
 ## Typically you would choose a darker texture for offline and lighter for online.
-## However, using the same lighter texture for both works well as a tint is applied.
+## However, using the same lighter texture for both works well if a tint is applied.
 ## If you want to style the frame with other textures just add them to the object
-## Contents and specify the texture names here. They don't have to be wood,
+## Contents and specify the texture names here.
 ##
 ## These settings can also be a valid texture UUID rather than an inventory texture name
 ##
-## Only used if FRAME_STYLE = WOOD. The textures must be in the object Contents.
+## Only used if FRAME_STYLE = Texture. The textures must be in the object Contents or specified as an asset UUID.
 ##
-WOOD_ONLINE = Online-Oak
+TEXTURE_ONLINE = Online-Oak
 ##
-WOOD_OFFLINE = Offline-Rosewood
+TEXTURE_OFFLINE = Offline-Rosewood
 ##
-## WOOD_TINT specifies if the beveled side textures should be tinted to further enhance status indication
-## Only used uf FRAME_STYLE = WOOD. Default is TRUE
+## TEXTURE_TINT specifies if the beveled side textures should be tinted to further enhance status indication
+## Only used uf FRAME_STYLE = Texture [Default: TRUE]
 ##
-WOOD_TINT = TRUE
+TEXTURE_TINT = TRUE
 ##
 ## COL_ONLINE and COL_OFFLINE specify the color vectors used for tinting and to indicate status.
 ##

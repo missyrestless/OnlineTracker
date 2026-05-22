@@ -6,7 +6,14 @@
   * DONE Create a new touch handler and abstract the current event handler out to reuse as a function
 * DONE Find better textures and metal or other texture types
 * DONE Include elapsed time and previous login in IM and/or chat
+* DONE Add dialog menu on owner long touch to configure object
+* DONE Add menu pagination for menus > 12 entries
+* DONE Check if button labels are 24 or fewer characters and if not then truncate
+  * DONE Or just shorten long texture names
+* DONE Add LICENSE to distribution
 
-- Add support for tracking multiple avatars in a linked prim set
-- Use QuickChart or similar to generate graphs of online status over time
-  - https://quickchart.io/documentation/send-charts-discord-bot/
+- Longer term wish list
+  - Add support for tracking multiple avatars in a linked prim set
+  - Use Experience Key-Value pairs to store tracking data
+  - Use QuickChart or similar to generate graphs of online status over time
+    - https://quickchart.io/documentation/send-charts-discord-bot/

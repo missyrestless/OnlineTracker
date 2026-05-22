@@ -21,6 +21,8 @@
 // 17-May-2026 - Use embeds objects for Discord postings
 // 18-May-2026 - Format date/time, display last login/logoff in Discord messages
 // 19-May-2026 - Add support for customizing prim textures/colors/glow and pic
+// 21-May-2026 - Add dialog menu for owner configuration with long touch
+// 22-May-2026 - Add menu pagination for dialog menus with > 12 buttons
 //
 // VARIABLES
 //
@@ -47,6 +49,13 @@ key agentDataRequestID = NULL_KEY;
 key discordRequestID = NULL_KEY;
 key profileRequestID = NULL_KEY;
 
+// Dialog Menu listener handle, channel, boolean
+integer listenHandle;
+integer dialogChannel;
+integer pageNumber   = 1;
+integer inDialogMenu = FALSE;
+integer isTracking   = TRUE;
+
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
 integer lastLogin = 0;
@@ -62,39 +71,52 @@ string D_GRN   = "65280";
 
 // Common color vectors reference
 // ------------------------------
-// vector NAVY     = <0.000, 0.122, 0.247>;
-// vector BLUE     = <0.000, 0.455, 0.851>;
-// vector AQUA     = <0.498, 0.859, 1.000>;
-// vector TEAL     = <0.224, 0.800, 0.800>;
-// vector OLIVE    = <0.239, 0.600, 0.439>;
-// vector GREEN    = <0.180, 0.800, 0.251>;
-// vector LIME     = <0.004, 1.000, 0.439>;
-// vector YELLOW   = <1.000, 0.863, 0.000>;
-// vector ORANGE   = <1.000, 0.522, 0.106>;
-// vector RED      = <1.000, 0.255, 0.212>;
-// vector MAROON   = <0.522, 0.078, 0.294>;
-// vector FUCHSIA  = <0.941, 0.071, 0.745>;
-// vector PURPLE   = <0.694, 0.051, 0.788>;
-// vector WHITE    = <1.000, 1.000, 1.000>;
-// vector SILVER   = <0.867, 0.867, 0.867>;
-// vector GRAY     = <0.667, 0.667, 0.667>;
-// vector BLACK    = <0.067, 0.067, 0.067>;
-vector OFFLINE_COL = <1.000, 0.255, 0.212>;
-vector ONLINE_COL  = <0.180, 0.800, 0.251>;
-vector WHITE       = <1.000, 1.000, 1.000>;
+vector NAVY     = <0.000, 0.122, 0.247>;
+vector BLUE     = <0.000, 0.455, 0.851>;
+vector AQUA     = <0.498, 0.859, 1.000>;
+vector TEAL     = <0.224, 0.800, 0.800>;
+vector OLIVE    = <0.239, 0.600, 0.439>;
+vector GREEN    = <0.180, 0.800, 0.251>;
+vector LIME     = <0.004, 1.000, 0.439>;
+vector YELLOW   = <1.000, 0.863, 0.000>;
+vector ORANGE   = <1.000, 0.522, 0.106>;
+vector RED      = <1.000, 0.255, 0.212>;
+vector MAROON   = <0.522, 0.078, 0.294>;
+vector FUCHSIA  = <0.941, 0.071, 0.745>;
+vector PURPLE   = <0.694, 0.051, 0.788>;
+vector WHITE    = <1.000, 1.000, 1.000>;
+vector SILVER   = <0.867, 0.867, 0.867>;
+vector GRAY     = <0.667, 0.667, 0.667>;
+vector BLACK    = <0.067, 0.067, 0.067>;
+
+vector OFFLINE_COL = RED;
+vector ONLINE_COL  = GREEN;
+
+list color_menu = ["NAVY", "BLUE", "AQUA", "TEAL", "OLIVE", "GREEN", "LIME", "YELLOW", "ORANGE",
+                   "RED", "MAROON", "FUCHSIA", "PURPLE", "WHITE", "SILVER", "GRAY", "BLACK"];
+// color_vectors list must exactly match the order and number of color_menu list
+list color_vectors = [NAVY, BLUE, AQUA, TEAL, OLIVE, GREEN, LIME, YELLOW, ORANGE,
+                      RED, MAROON, FUCHSIA, PURPLE, WHITE, SILVER, GRAY, BLACK];
+
+// Glow status selection menu entries
+list glow_menu = ["Glow Off", "0.05", "0.1", "0.15", "0.2", "0.25", "0.3",
+                  "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65",
+                  "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1.0"];
 
 // Frame style and textures
-string  customProfilePic = "";
-integer UseRGB      = 0; 
-integer TintSides   = 1;
-string  WoodOnline  = "Online-Oak";
-string  WoodOffline = "Offline-Rosewood";
-float   onlineGlow  = 0.2;
-float   offlineGlow = 0.0;
+string  profilePic     = "";
+integer UseRGB         = FALSE; 
+integer TintSides      = FALSE;
+string  OnlineTexture  = "Online-Mosaic";
+string  OfflineTexture = "Offline-Mosaic";
+float   onlineGlow     = 0.2;
+float   offlineGlow    = 0.0;
 
-integer IsOnline = -1; // Indicates uninitialized online status
+integer IsOnline       = -1; // Indicates uninitialized online status
 integer GetDisplayName = TRUE;
-integer HoverText = FALSE;
+integer HoverText      = FALSE;
+integer online_glow;
+integer online_tint;
 integer NotecardLine;
 // Should online status be sent to owner as an Instant Message
 integer IMowner = TRUE;
@@ -102,7 +124,7 @@ integer IMowner = TRUE;
 integer ownerOnly = TRUE;
 // Should online status be broadcast to a Discord channel
 integer DiscordRelay = FALSE;
-string  Discord_URL = "";
+string  Discord_URL  = "";
 // The name of the configuration notecard
 string CONFIG_CARD = "Target_Config";
 key D_QueryID;
@@ -110,25 +132,27 @@ key owner = NULL_KEY;
 key display_name_query;
 key name_query;
 
+string pageMenuName;
 string profileURL;
 string webprofURL;
+//
 // END VARIABLES
 //
 // FUNCTIONS
-GetProfilePic(key id) {
-    string URL_RESIDENT = "https://world.secondlife.com/resident/";
-    profileRequestID = llHTTPRequest(URL_RESIDENT + (string)id,[HTTP_METHOD,"GET"],"");
-}
-
-SetSideTextures(vector col) { // Set the sides to the online status texture/color
+//
+// Set the sides to the online status texture/color
+SetSideTextures() {
     integer    i;
     integer    faces = llGetNumberOfSides();
+    vector     col;
 
     // The prim must be configured with face 0 as the profile pic
-    if (col == OFFLINE_COL) {
-        llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, FALSE]);
-    } else {
+    if (onlineStatus == "ONLINE") {
+        col = ONLINE_COL;
         llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, TRUE]);
+    } else {
+        col = OFFLINE_COL;
+        llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, FALSE]);
     }
     // Sides and back
     for (i = 1; i < faces; i++) {
@@ -142,10 +166,10 @@ SetSideTextures(vector col) { // Set the sides to the online status texture/colo
             }
         } else {
             if (col == OFFLINE_COL) {
-                llSetTexture(WoodOffline, i);
+                llSetTexture(OfflineTexture, i);
                 llSetPrimitiveParams([PRIM_GLOW, i, offlineGlow]);
             } else {
-                llSetTexture(WoodOnline, i);
+                llSetTexture(OnlineTexture, i);
                 llSetPrimitiveParams([PRIM_GLOW, i, onlineGlow]);
             }
             if (TintSides) {
@@ -184,15 +208,16 @@ profile_timer_init() {
         llSetText(TargetDisplayName + "\nChecking status...", WHITE, 1.0); // Initial hover text
     } else {
         // Clear any previously set hover text
-        llSetText("", <0,0,0>, 0.0);
+        llSetText("", ZERO_VECTOR, 0.0);
     }
     llSetObjectName(TargetDisplayName + " Online Tracker");
     objectDescription = TargetDisplayName + " is " + onlineStatus;
     llSetObjectDesc(objectDescription);
-    if (customProfilePic == "") {
-        GetProfilePic(TargetUuid);
+    if (profilePic == "") {
+        profileRequestID = llHTTPRequest("https://world.secondlife.com/resident/" +
+                                        (string)TargetUuid,[HTTP_METHOD,"GET"],"");
     } else {
-        llSetTexture(customProfilePic, 0);
+        llSetTexture(profilePic, 0);
     }
     // Start monitoring immediately
     llSetTimerEvent(CheckInterval);
@@ -445,6 +470,198 @@ sendToDiscord(string dm, string et, integer ols, string time) {
     //
     // But straight up JSON is faster although less readable
 }
+
+stopListener() {
+	llListenRemove(listenHandle);
+  inDialogMenu = FALSE;
+  llSetTimerEvent(CheckInterval);
+}
+
+list get_Textures(string prefix) {
+    list texture_list = [];
+    integer count = llGetInventoryNumber(INVENTORY_TEXTURE);
+
+    // Populate list (Dialogs only show up to 12 buttons at once)
+    integer i;
+    integer position;
+    string texture_name;
+    for (i = 0; i < count; ++i) {
+        texture_name = llGetInventoryName(INVENTORY_TEXTURE, i);
+        position = llSubStringIndex(texture_name, prefix);
+        if (position != -1) {
+            texture_list += [texture_name];
+        }
+    }
+    return texture_list;
+}
+
+displayDialogMenu(string menu) {
+    listenHandle = llListen(dialogChannel, "", owner, "");
+    list texture_menu = [];
+    list tint_menu = color_menu;
+    string menuMessage;
+    if (menu == "frame") {
+        menuMessage = "\nOn Frame = Select online frame texture\nOff Frame = Select offline frame texture";
+        menuMessage = menuMessage + "\nUse Colors = Color frame rather than texture";
+        menuMessage += "\n\nSelect an option";
+        llDialog(owner, menuMessage, ["On Frame", "Off Frame", "Use Colors", "Main Menu", "Close"], dialogChannel);
+    } else if (menu == "onFrame") {
+        texture_menu = get_Textures("Online");
+        if (texture_menu) {
+            texture_menu += ["Main Menu", "Close"];
+            menuMessage = "\nCurrent online texture is " + OnlineTexture + "\n\nSelect an online texture";
+            pageMenuName = "onFrame";
+            ShowMenu(menuMessage, texture_menu);
+        }
+    } else if (menu == "offFrame") {
+        texture_menu = get_Textures("Offline");
+        if (texture_menu) {
+            texture_menu += ["Main Menu", "Close"];
+            menuMessage = "\nCurrent offline texture is " + OfflineTexture + "\n\nSelect an offline texture";
+            pageMenuName = "offFrame";
+            ShowMenu(menuMessage, texture_menu);
+        }
+    } else if (menu == "glow") {
+        menuMessage = "\nOn Glow = Select online glow status\nOff Glow = Select offline glow status";
+        menuMessage += "\n\nSelect an option";
+        llDialog(owner, menuMessage, ["On Glow", "Off Glow", "Main Menu", "Close"], dialogChannel);
+    } else if (menu == "onGlow") {
+        online_glow = TRUE;
+        glow_menu += ["Main Menu", "Close"];
+        menuMessage = "\nCurrent online glow status is " + (string)onlineGlow + "\n\nSelect online glow";
+        pageMenuName = "onGlow";
+        ShowMenu(menuMessage, glow_menu);
+    } else if (menu == "offGlow") {
+        online_glow = FALSE;
+        glow_menu += ["Main Menu", "Close"];
+        menuMessage = "\nCurrent offline glow status is " + (string)offlineGlow + "\n\nSelect offline glow";
+        pageMenuName = "offGlow";
+        ShowMenu(menuMessage, glow_menu);
+    } else if (menu == "tint") {
+        menuMessage = "\nOn Tint = Select online tint color\nOff Tint = Select offline tint color";
+        menuMessage += "\n\nSelect an option";
+        llDialog(owner, menuMessage, ["On Tint", "Off Tint", "Main Menu", "Close"], dialogChannel);
+    } else if (menu == "onTint") {
+        online_tint = TRUE;
+        tint_menu += ["Main Menu", "Close"];
+        integer vIndex = llListFindList(color_vectors, [ONLINE_COL]);
+        if (vIndex != -1) {
+            string cn = llList2String(color_menu, vIndex);
+            menuMessage = "\nCurrent online tint color is " + cn + "\n\nSelect an online tint";
+        } else {
+            menuMessage = "\nSelect an online tint";
+        }
+        pageMenuName = "onTint";
+        ShowMenu(menuMessage, tint_menu);
+    } else if (menu == "offTint") {
+        online_tint = FALSE;
+        tint_menu += ["Main Menu", "Close"];
+        menuMessage = "\nCurrent offline tint color is " + (string)OFFLINE_COL + "\n\nSelect an offline tint";
+        pageMenuName = "offTint";
+        ShowMenu(menuMessage, tint_menu);
+    } else if (menu == "stop") {
+        llDialog(owner, "Do you wish to proceed with shutdown of the online tracker?", ["YES", "NO"], dialogChannel);
+    } else {
+        string show_hide;
+        if (HoverText) {
+            show_hide = "Hover OFF";
+        } else {
+            show_hide = "Hover ON";
+        }
+        string tint_sides;
+        string tint_color = " ---- ";
+        if (TintSides) {
+            tint_sides = "Tint OFF";
+            tint_color = "Tint Color";
+        } else {
+            tint_sides = "Tint ON";
+        }
+        string use_rgb;
+        if (UseRGB) {
+            use_rgb = "Texture ON";
+        } else {
+            use_rgb = "Color ON";
+        }
+        string tracking;
+        if (isTracking) {
+            tracking = "Stop";
+        } else {
+            tracking = "Start";
+        }
+        string run_status;
+        if (isTracking) {
+            run_status = "tracking " + TargetDisplayName;
+        } else {
+            run_status = "STOPPED";
+        }
+        string hov_status;
+        if (HoverText) {
+            hov_status = "Enabled";
+        } else {
+            hov_status = "Disabled";
+        }
+        string tnt_status;
+        if (TintSides) {
+            tnt_status = "Enabled";
+        } else {
+            tnt_status = "Disabled";
+        }
+        string bdr_status;
+        if (UseRGB) {
+            bdr_status = "Color";
+        } else {
+            bdr_status = "Texture";
+        }
+        menuMessage = "\nOnline Tracker is " + run_status + "\nHover Text is " + hov_status;
+        menuMessage = menuMessage + "\nFrame Tinting is " + tnt_status;
+        menuMessage = menuMessage + "\nFrame is " + bdr_status;
+        menuMessage += "\n\nSelect an option";
+        list main_menu = [];
+        if (UseRGB) {
+            main_menu = [tracking, show_hide, tint_sides, tint_color, use_rgb, "Close"];
+        } else {
+            main_menu = [tracking, "Pick Frame", show_hide, tint_sides, tint_color, use_rgb, "Close"];
+        }
+        pageMenuName = "main";
+        ShowMenu(menuMessage, main_menu);
+    }
+    inDialogMenu = TRUE;
+    llSetTimerEvent(60);
+}
+
+// Show the specific menu page
+// Pass in the full menu list
+ShowMenu(string msg, list fm) {
+    integer list_length = llGetListLength(fm);
+    if (list_length > 12) {
+        integer totalPages = (list_length / 10) + (list_length % 10 != 0);
+
+        // Safety check: bound page numbers
+        if (pageNumber < 1) pageNumber = 1;
+        if (pageNumber > totalPages) pageNumber = totalPages;
+
+        // Calculate slice indices
+        integer start = (pageNumber - 1) * 10;
+        integer end = start + 9;
+
+        // Grab the 10 (or fewer) items for this page
+        list displayList = llList2List(fm, start, end);
+
+        // Add navigation buttons to the bottom of the list
+        if (totalPages > 1) {
+            if (pageNumber > 1) displayList += ["<<< Back"];
+            if (pageNumber < totalPages) displayList += ["Next >>>"];
+        }
+
+        // Send the dialog page
+        llDialog(owner, msg + " (Page " + (string)pageNumber + " of " +
+                (string)totalPages + "):", displayList, dialogChannel);
+    } else {
+        // Send the dialog
+        llDialog(owner, msg, fm, dialogChannel);
+    }
+}
+//
 // END FUNCTIONS
 //
 // STATES & EVENT HANDLERS
@@ -460,6 +677,10 @@ default {
         lastLogin = 0;
         lastLogoffStr = "";
         lastLoginStr = "";
+
+        // Create random channel within range [-1000000000,-2000000000]
+        dialogChannel = (integer)(llFrand(-1000000000.0) - 1000000000.0);
+
         if (llGetInventoryType(CONFIG_CARD) == INVENTORY_NOTECARD) {
             NotecardLine = 0;
             D_QueryID = llGetNotecardLine( CONFIG_CARD, NotecardLine );
@@ -470,9 +691,138 @@ default {
         }
     }
 
+	  listen(integer channel, string name, key id, string message) {
+		    stopListener();
+        // Ignore everybody but the owner
+        if (id != owner) return;
+        // Handle pagination for multi page menus
+        if (message == "<<< Back") {
+            pageNumber--;
+            displayDialogMenu(pageMenuName);
+            return;
+        } else if (message == "Next >>>") {
+            pageNumber++;
+            displayDialogMenu(pageMenuName);
+            return;
+        } else if (message == "Hover OFF") {
+            HoverText = FALSE;
+            llSetText("", ZERO_VECTOR, 0.0);
+		    } else if (message == "Hover ON") {
+            HoverText = TRUE;
+            if (onlineStatus == "ONLINE") {
+                llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, ONLINE_COL, 1.0);
+            } else {
+                llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, OFFLINE_COL, 1.0);
+            }
+		    } else if (message == "Start") {
+            llSetTimerEvent(CheckInterval);
+            isTracking = TRUE;
+		    } else if (message == "Stop") {
+            displayDialogMenu("stop");
+            return;
+		    } else if (message == "YES") {
+            llSetTimerEvent(0);
+            isTracking = FALSE;
+		    } else if (message == "Tint ON") {
+            TintSides = TRUE;
+            SetSideTextures();
+		    } else if (message == "Tint OFF") {
+            TintSides = FALSE;
+            llSetColor(WHITE, ALL_SIDES);
+		    } else if (message == "Texture ON") {
+            UseRGB = FALSE;
+            SetSideTextures();
+		    } else if ((message == "Color ON") || (message == "Use Colors")) {
+            UseRGB = TRUE;
+            SetSideTextures();
+        } else if (message == "On Glow") {
+            displayDialogMenu("onGlow");
+            return;
+        } else if (message == "Off Glow") {
+            displayDialogMenu("offGlow");
+            return;
+		    } else if (message == "Tint Color") {
+            displayDialogMenu("tint");
+            return;
+        } else if (message == "On Tint") {
+            displayDialogMenu("onTint");
+            return;
+        } else if (message == "Off Tint") {
+            displayDialogMenu("offTint");
+            return;
+		    } else if (message == "Pick Frame") {
+            displayDialogMenu("frame");
+            return;
+        } else if (message == "On Frame") {
+            displayDialogMenu("onFrame");
+            return;
+        } else if (message == "Off Frame") {
+            displayDialogMenu("offFrame");
+            return;
+        } else if (llGetSubString(message, -7, -1) == "-Online") {
+            if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
+                OnlineTexture = message;
+                SetSideTextures();
+                displayDialogMenu("frame");
+                return;
+            }
+        } else if (llGetSubString(message, -8, -1) == "-Offline") {
+            if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
+                OfflineTexture = message;
+                SetSideTextures();
+                displayDialogMenu("frame");
+                return;
+            }
+        } else if (llListFindList(glow_menu, [message]) != -1) {
+            float glow_status;
+            if (message == "Glow Off") {
+                glow_status = 0.0;
+            } else {
+                glow_status = (float)message;
+            }
+            if (online_glow) {
+                if (onlineGlow != glow_status) {
+                    onlineGlow = glow_status;
+                    SetSideTextures();
+                }
+            } else {
+                if (offlineGlow != glow_status) {
+                    offlineGlow = glow_status;
+                    SetSideTextures();
+                }
+            }
+            displayDialogMenu("glow");
+            return;
+        } else if (llListFindList(color_menu, [message]) != -1) {
+            integer index = llListFindList(color_menu, [message]);
+            vector cv = llList2Vector(color_vectors, index);
+            if (online_tint) {
+                if (ONLINE_COL != cv) {
+                    ONLINE_COL = cv;
+                    SetSideTextures();
+                }
+            } else {
+                if (OFFLINE_COL != cv) {
+                    OFFLINE_COL = cv;
+                    SetSideTextures();
+                }
+            }
+            displayDialogMenu("tint");
+            return;
+        } else if (message == "Close") {
+            return; // Exit the listen event, letting the dialog stay closed
+		    }
+        // Re-send the dialog to keep the menu open
+        displayDialogMenu("main");
+	  }
+
     timer() {
-        // Periodically check status
-        agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+        if (inDialogMenu) {
+		        stopListener();
+        } else {
+            // Periodically check status
+            agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+        }
     }
 
     touch_start(integer total_number) {
@@ -491,15 +841,13 @@ default {
                 // Execute this if the click was held
                 // TODO: bring up a dialog menu with configuration options
                 //       e.g. Frame texture, Glow, Tint on/off, Size, Hover text on/off
-                // For now just toggle Hover text display
-                if (HoverText) {
-                    // Clears the hover text, sets color to black, and makes it 100% transparent
-                    llSetText("", <0.0, 0.0, 0.0>, 0.0);
-                }
-                HoverText = !HoverText;
+		            stopListener();
+                pageNumber = 1; // Reset to page 1
+                displayDialogMenu("main");
+            } else {
+                // Send a touch request for online status
+                touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
             }
-            // Send a touch request for online status
-            touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
         } else {
             if (!ownerOnly) {
                 touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
@@ -525,14 +873,14 @@ default {
             string status_msg = "";
             // Set hover text status and color
             onlineStatus = llList2String(stat_cols, CurrentlyOnline);   // boolean/index = 0   or 1
+            vector color = llList2Vector(stat_cols, CurrentlyOnline+2); // boolean/index = 0+2 or 1+2
 
             // Set the object description to the online status if it has changed
             objectDescription = TargetDisplayName + " is " + onlineStatus;
             if (llGetObjectDesc() != objectDescription) {
                 llSetObjectDesc(objectDescription);
             }
-            vector color = llList2Vector(stat_cols, CurrentlyOnline+2); // boolean/index = 0+2 or 1+2
-            SetSideTextures(color);
+            SetSideTextures();
 
             // Force an online status report the first time through when IsOnline is uninitialized
             if (IsOnline == -1) {
@@ -648,11 +996,11 @@ default {
                     } else if (name == "CUSTOM_PROFILE") {
                         // Check if this is the name of a texture in the prim inventory or a valid UUID
                         if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
-                            customProfilePic = value;
+                            profilePic = value;
                         } else {
                             // Is it a valid UUID ?
                             if ((key)value) {
-                                customProfilePic = value;
+                                profilePic = value;
                             }
                         }
                     } else if (name == "DISPLAY_NAME") {
@@ -674,10 +1022,10 @@ default {
                     } else if (name == "OWNER_ONLY") {
                         ownerOnly = (integer)value; 
                     } else if (name == "FRAME_STYLE") {
-                        if ((value == "WOOD") || (value == "wood")) {
-                            UseRGB = 0; 
+                        if (llToLower(value) == "rgb") {
+                            UseRGB = TRUE; 
                         } else {
-                            UseRGB = 1; 
+                            UseRGB = FALSE; 
                         }
                     } else if (name == "COL_ONLINE") {
                         if (IsVector(value)) {
@@ -687,26 +1035,26 @@ default {
                         if (IsVector(value)) {
                             OFFLINE_COL = (vector)value;
                         }
-                    } else if (name == "WOOD_TINT") {
+                    } else if (name == "TEXTURE_TINT") {
                         TintSides = (integer)value;
-                    } else if (name == "WOOD_ONLINE") {
+                    } else if (name == "TEXTURE_ONLINE") {
                         // Check if this is the name of a texture in the prim inventory or a valid UUID
                         if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
-                            WoodOnline = value;
+                            OnlineTexture = value;
                         } else {
                             // Is it a valid UUID ?
                             if ((key)value) {
-                                WoodOnline = value;
+                                OnlineTexture = value;
                             }
                         }
-                    } else if (name == "WOOD_OFFLINE") {
+                    } else if (name == "TEXTURE_OFFLINE") {
                         // Check if this is the name of a texture in the prim inventory or a valid UUID
                         if (llGetInventoryType(value) == INVENTORY_TEXTURE) {
-                            WoodOffline = value;
+                            OfflineTexture = value;
                         } else {
                             // Is it a valid UUID ?
                             if ((key)value) {
-                                WoodOffline = value;
+                                OfflineTexture = value;
                             }
                         }
                     }
