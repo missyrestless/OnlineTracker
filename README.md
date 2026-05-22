@@ -42,6 +42,7 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - Touch and hold for 2 seconds to open a configuration dialog menu (owner only)
 - Mouse hover over the in-world object will display the online status in the object description
 - Optimized low lag script and only a single prim
+- Particle display when the tracked Avatar logs in or logs out
 - Open Source, GPL Version 3 licensed script, view the source on [Github](https://github.com/missyrestless/OnlineTracker)
 
 ## CONTENTS
@@ -50,7 +51,7 @@ After unpacking the product box, find the Discord IM Online Tracker folder in yo
 
 - "Discord IM Online Tracker (rez me)" object
 - "Target_Config" notecard
-- "Features and Setup Instructions - README" notecard
+- "Setup Instructions - README" notecard
 
 ### Permissions
 
@@ -87,7 +88,7 @@ Edit the `Target_Config` notecard, replacing "target-avatar-uuid" with the UUID 
 
 Note that creating a custom scripted prim from release artifacts may not function as expected. The prim needs to be sculpted in the proper manner and prim faces numbered matching what the script expects. The Second Life Marketplace listing for this product includes a rezzable object already prepared in this manner. The DIY approach using release artifacts may require additional effort but is provided for those who wish to experiment and customize.
 
-More detailed setup instructions can be found in the `Features_and_Setup_Instructions.txt` release artifact or this README.
+More detailed setup instructions can be found in the `Setup_Instructions.txt` release artifact or this README.
 
 ## SETUP STEPS
 

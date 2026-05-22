@@ -31,6 +31,7 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - Touch and hold for 2 seconds to open a configuration dialog menu (owner only)
 - Mouse hover over the in-world object will display the online status in the object description
 - Optimized low lag script and only a single prim
+- Particle display when the tracked Avatar logs in or logs out
 - Open Source, GPL Version 3 licensed script, view the source on Github at https://github.com/missyrestless/OnlineTracker
 
 CONTENTS
@@ -41,7 +42,7 @@ This folder will contain the following:
 
 - "Discord IM Online Tracker (rez me)" object
 - "Target_Config" notecard
-- "Features and Setup Instructions - README" notecard
+- "Setup Instructions - README" notecard
 
 Permissions:
     Discord IM Online Tracker (rez me) object is Copy/Modify/No Transfer
