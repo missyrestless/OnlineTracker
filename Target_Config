@@ -61,3 +61,6 @@ COL_OFFLINE = <1.000, 0.255, 0.212>
 GLOW_ONLINE = 0.2
 ##
 GLOW_OFFLINE = 0.0
+##
+## PARTICLES specifies if the in-world object will emit a particle display on login/logout/touch [Default: TRUE]
+PARTICLES = TRUE

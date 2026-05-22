@@ -170,6 +170,9 @@ you can do so in a variety of ways:
 - `GLOW_OFFLINE` sets the offline glow status
     - The value should be a floating decimal between 0 and 1
     - If not set then the offline glow status is set to `0.0`
+- `PARTICLES` specifies if the in-world object will emit a particle display on login/logout/touch
+    - Set to `TRUE` to enable particle displays or `FALSE` to disable
+    - If not set then particle displays are enabled by default
 
 ### Default Target_Config notecard
 
@@ -196,6 +199,7 @@ appearance. These dialog menus can be used to:
 - Enable or disable status display in Hover Text
 - Enable or disable tinting of the frame border to further indicate online status
 - Enable or disable frame border textures/colors
+- Enable or disable particle displays
 - Select frame border online and offline textures
 - Select frame border online and offline tint color
 - Select frame online and offline glow status

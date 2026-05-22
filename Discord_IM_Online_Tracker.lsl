@@ -32,7 +32,7 @@ key TargetUuid = NULL_KEY;
 string TargetName = "";
 string TargetDisplayName = "";
 // How often to check in seconds (60s minimum recommended)
-float CheckInterval = 120.0; 
+float CheckInterval = 120.0;
 // ---------------------
 string onlineStatus = "Unknown";
 string objectDescription;
@@ -55,6 +55,9 @@ integer dialogChannel;
 integer pageNumber   = 1;
 integer inDialogMenu = FALSE;
 integer isTracking   = TRUE;
+integer particles    = TRUE;
+integer particles_on = FALSE;
+integer randParticle = 0;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
@@ -105,10 +108,10 @@ list glow_menu = ["Glow Off", "0.05", "0.1", "0.15", "0.2", "0.25", "0.3",
 
 // Frame style and textures
 string  profilePic     = "";
-integer UseRGB         = FALSE; 
+integer UseRGB         = FALSE;
 integer TintSides      = FALSE;
-string  OnlineTexture  = "Online-Mosaic";
-string  OfflineTexture = "Offline-Mosaic";
+string  OnlineTexture  = "Mosaic-Online";
+string  OfflineTexture = "Mosaic-Offline";
 float   onlineGlow     = 0.2;
 float   offlineGlow    = 0.0;
 
@@ -138,7 +141,7 @@ string webprofURL;
 //
 // END VARIABLES
 //
-// FUNCTIONS
+// GENERAL FUNCTIONS
 //
 // Set the sides to the online status texture/color
 SetSideTextures() {
@@ -354,17 +357,17 @@ string getElapsedTime(integer secs) {
     integer days;
     integer hours;
     integer minutes;
- 
+
     if (secs>=86400)
     {
         days=llFloor(secs/86400);
         secs=secs%86400;
         timeStr+=(string)days+" day";
-        if (days>1) 
+        if (days>1)
         {
             timeStr+="s";
         }
-        if(secs>0) 
+        if(secs>0)
         {
             timeStr+=", ";
         }
@@ -412,19 +415,18 @@ string getElapsedTime(integer secs) {
 // dm is message to send, et is elapsed time since last login/logoff, ols is 0/1 logoff/login
 // sendToDiscord("message to send", "elapsed time since last log", 0 or 1);
 sendToDiscord(string dm, string et, integer ols, string time) {
+    // External URLs
     string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
     string docURL = "https://online.neoman.dev/";
     string repURL = "https://marketplace.secondlife.com/p/Discord-IM-Online-Tracker/28289130";
     // Images
-    string otrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
-    // string icoURL = otrURL + "/refs/heads/main/images/online_icon.png";
-    // string ftrURL = otrURL + "/refs/heads/main/images/online_tracker.png";
-    string ftrURL = otrURL + "/refs/heads/main/images/stopwatch.png";
-    string ftrTXT;
+    string ftrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
+    ftrURL += "/refs/heads/main/images/stopwatch.png";
+    string ftrTXT = "Time of Second Life";
     if (ols) {
-        ftrTXT = "Time of Second Life login";
+        ftrTXT += " login";
     } else {
-        ftrTXT = "Time of Second Life logout";
+        ftrTXT += " logout";
     }
 
     // Create the JSON payload, backslashing quotes all over the place
@@ -442,7 +444,7 @@ sendToDiscord(string dm, string et, integer ols, string time) {
 
     // Make the HTTP request to the Discord Webhook, sending the JSON payload
     discordRequestID = llHTTPRequest(Discord_URL, [
-        HTTP_METHOD, "POST", 
+        HTTP_METHOD, "POST",
         HTTP_MIMETYPE, "application/json",
         HTTP_VERIFY_CERT,      TRUE,
         HTTP_VERBOSE_THROTTLE, TRUE,
@@ -450,10 +452,10 @@ sendToDiscord(string dm, string et, integer ols, string time) {
     ], json);
 
     // Could have used LSL lists
-    // list json    = [ 
+    // list json    = [
     //     "avatar_url",  aviURL + TargetName + "/thumb_sl_image.png",
     //     "username", "Online Tracker",
-    //     "embeds", 
+    //     "embeds",
     //         llList2Json(JSON_ARRAY,
     //         [
     //         llList2Json(JSON_OBJECT,
@@ -472,9 +474,9 @@ sendToDiscord(string dm, string et, integer ols, string time) {
 }
 
 stopListener() {
-	llListenRemove(listenHandle);
-  inDialogMenu = FALSE;
-  llSetTimerEvent(CheckInterval);
+    llListenRemove(listenHandle);
+    inDialogMenu = FALSE;
+    llSetTimerEvent(CheckInterval);
 }
 
 list get_Textures(string prefix) {
@@ -612,15 +614,23 @@ displayDialogMenu(string menu) {
         } else {
             bdr_status = "Texture";
         }
+        string part_status;
+        if (particles) {
+            part_status = "OFF";
+        } else {
+            part_status = "ON";
+        }
         menuMessage = "\nOnline Tracker is " + run_status + "\nHover Text is " + hov_status;
         menuMessage = menuMessage + "\nFrame Tinting is " + tnt_status;
         menuMessage = menuMessage + "\nFrame is " + bdr_status;
+        menuMessage = menuMessage + "\nBling particles are " + part_status;
+        part_status = "Bling " + part_status;
         menuMessage += "\n\nSelect an option";
         list main_menu = [];
         if (UseRGB) {
-            main_menu = [tracking, show_hide, tint_sides, tint_color, use_rgb, "Close"];
+            main_menu = [tracking, show_hide, tint_sides, tint_color, use_rgb, part_status, "Close"];
         } else {
-            main_menu = [tracking, "Pick Frame", show_hide, tint_sides, tint_color, use_rgb, "Close"];
+            main_menu = [tracking, "Pick Frame", show_hide, tint_sides, tint_color, use_rgb, part_status, "Close"];
         }
         pageMenuName = "main";
         ShowMenu(menuMessage, main_menu);
@@ -662,7 +672,113 @@ ShowMenu(string msg, list fm) {
     }
 }
 //
-// END FUNCTIONS
+// END GENERAL FUNCTIONS
+//
+// PARTICLE FUNCTIONS
+//
+ParticlesOff() {
+    llParticleSystem([]);
+}
+
+Bling() {
+    ParticlesOff();
+    llParticleSystem([
+        PSYS_PART_FLAGS, (0
+                           | PSYS_PART_INTERP_COLOR_MASK
+                           | PSYS_PART_EMISSIVE_MASK
+                           | PSYS_PART_INTERP_SCALE_MASK
+                           | PSYS_PART_FOLLOW_VELOCITY_MASK
+                           | PSYS_PART_WIND_MASK
+                         ),
+        PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_EXPLODE,
+
+        // Color Parameters
+        PSYS_PART_START_COLOR,     <1.0, 0.5, 0.0>, // Bright Orange
+        PSYS_PART_END_COLOR,       <0.0, 0.0, 1.0>, // Fades to Blue
+
+        // Transparency
+        PSYS_PART_START_ALPHA,     1.0,
+        PSYS_PART_END_ALPHA,       0.2,
+
+        // Size
+        PSYS_PART_START_SCALE,     <0.5, 0.5, 0.0>,
+        PSYS_PART_END_SCALE,       <2.0, 2.0, 0.0>,
+
+        // Timing & Speed
+        PSYS_PART_MAX_AGE,         3.0,
+        PSYS_SRC_BURST_RATE,       0.5,
+        PSYS_SRC_BURST_PART_COUNT, 2,
+        PSYS_SRC_BURST_SPEED_MIN,  1.0,
+        PSYS_SRC_BURST_SPEED_MAX,  3.0
+    ]);
+}
+
+Hearts() {
+    ParticlesOff();
+    llParticleSystem([
+        PSYS_SRC_TEXTURE, "5b3f3df0-b20b-5dc4-b49e-377c5805a0e3",
+        PSYS_PART_START_SCALE,     <0.1, 0.1, FALSE>,
+        PSYS_PART_END_SCALE,       <0.4, 0.4, FALSE>,
+        PSYS_PART_START_ALPHA,     1.0,
+        PSYS_PART_END_ALPHA,       0.5,
+
+        PSYS_SRC_BURST_PART_COUNT, 2,
+        PSYS_SRC_BURST_RATE,       0.5,
+        PSYS_PART_MAX_AGE,         2.0,
+        PSYS_SRC_MAX_AGE,          0.0,
+
+        PSYS_SRC_PATTERN,          2,
+        PSYS_SRC_BURST_SPEED_MIN,  0.5,
+        PSYS_SRC_BURST_SPEED_MAX,  2.0,
+        PSYS_SRC_BURST_RADIUS,     0.000000,
+
+        PSYS_SRC_ANGLE_BEGIN,      0.05*PI,
+        PSYS_SRC_ANGLE_END,        0.05*PI,
+        PSYS_SRC_OMEGA,            <0.0, 0.0, 0.0>,
+
+        PSYS_SRC_ACCEL,            <0.0, 0.0, 0.0>,
+        PSYS_SRC_TARGET_KEY,       (key)"",
+
+        PSYS_PART_FLAGS, ( 0
+                             | PSYS_PART_INTERP_COLOR_MASK
+                             | PSYS_PART_INTERP_SCALE_MASK
+                             | PSYS_PART_EMISSIVE_MASK
+                             | PSYS_PART_FOLLOW_VELOCITY_MASK
+                             | PSYS_PART_WIND_MASK
+                         )
+    ]);
+}
+
+Sparkle() {
+    ParticlesOff();
+    llParticleSystem([
+        PSYS_PART_START_SCALE,     <0.00, 0.20, 0>,
+        PSYS_PART_END_SCALE,       <0.40, 0.00, 0>,
+        PSYS_PART_START_COLOR,     <0.5, 1.0, 0.0>,
+        PSYS_PART_END_COLOR,       <0.0, 0.0, 1.0>,
+        PSYS_PART_START_ALPHA,     1.0,
+        PSYS_PART_END_ALPHA,       0.2,
+        PSYS_SRC_BURST_PART_COUNT, 2,
+        PSYS_SRC_BURST_RATE,       0.05,
+        PSYS_PART_MAX_AGE,         0.30,
+        PSYS_SRC_MAX_AGE,          0.00,
+        PSYS_SRC_PATTERN,          8,
+        PSYS_SRC_BURST_SPEED_MIN,  00.10,
+        PSYS_SRC_BURST_SPEED_MAX,  00.10,
+        PSYS_SRC_BURST_RADIUS,     00.50,
+        PSYS_SRC_ANGLE_BEGIN,      0.00 *PI,
+        PSYS_SRC_ANGLE_END,        1.00 *PI,
+        PSYS_SRC_OMEGA,            <00.00, 00.00, 00.00>,
+        PSYS_SRC_ACCEL,            <00.00, 00.00, -00.10>,
+        PSYS_PART_FLAGS, (integer) ( 0
+                                      | PSYS_PART_INTERP_COLOR_MASK
+                                      | PSYS_PART_INTERP_SCALE_MASK
+                                      | PSYS_PART_EMISSIVE_MASK
+                                   )
+    ]);
+}
+//
+// END PARTICLE FUNCTIONS
 //
 // STATES & EVENT HANDLERS
 default {
@@ -691,8 +807,8 @@ default {
         }
     }
 
-	  listen(integer channel, string name, key id, string message) {
-		    stopListener();
+    listen(integer channel, string name, key id, string message) {
+        stopListener();
         // Ignore everybody but the owner
         if (id != owner) return;
         // Handle pagination for multi page menus
@@ -704,35 +820,47 @@ default {
             pageNumber++;
             displayDialogMenu(pageMenuName);
             return;
+        } else if (message == "Bling ON") {
+            particles = TRUE;
+            llSetTimerEvent(10);
+            randParticle = (integer)llFrand(2.0);
+            if (randParticle == 1) {
+                Bling();
+            } else {
+                Hearts();
+            }
+            particles_on = TRUE;
+        } else if (message == "Bling OFF") {
+            particles = FALSE;
         } else if (message == "Hover OFF") {
             HoverText = FALSE;
             llSetText("", ZERO_VECTOR, 0.0);
-		    } else if (message == "Hover ON") {
+        } else if (message == "Hover ON") {
             HoverText = TRUE;
             if (onlineStatus == "ONLINE") {
                 llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, ONLINE_COL, 1.0);
             } else {
                 llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, OFFLINE_COL, 1.0);
             }
-		    } else if (message == "Start") {
+        } else if (message == "Start") {
             llSetTimerEvent(CheckInterval);
             isTracking = TRUE;
-		    } else if (message == "Stop") {
+        } else if (message == "Stop") {
             displayDialogMenu("stop");
             return;
-		    } else if (message == "YES") {
+        } else if (message == "YES") {
             llSetTimerEvent(0);
             isTracking = FALSE;
-		    } else if (message == "Tint ON") {
+        } else if (message == "Tint ON") {
             TintSides = TRUE;
             SetSideTextures();
-		    } else if (message == "Tint OFF") {
+        } else if (message == "Tint OFF") {
             TintSides = FALSE;
             llSetColor(WHITE, ALL_SIDES);
-		    } else if (message == "Texture ON") {
+        } else if (message == "Texture ON") {
             UseRGB = FALSE;
             SetSideTextures();
-		    } else if ((message == "Color ON") || (message == "Use Colors")) {
+        } else if ((message == "Color ON") || (message == "Use Colors")) {
             UseRGB = TRUE;
             SetSideTextures();
         } else if (message == "On Glow") {
@@ -741,7 +869,7 @@ default {
         } else if (message == "Off Glow") {
             displayDialogMenu("offGlow");
             return;
-		    } else if (message == "Tint Color") {
+        } else if (message == "Tint Color") {
             displayDialogMenu("tint");
             return;
         } else if (message == "On Tint") {
@@ -750,7 +878,7 @@ default {
         } else if (message == "Off Tint") {
             displayDialogMenu("offTint");
             return;
-		    } else if (message == "Pick Frame") {
+        } else if (message == "Pick Frame") {
             displayDialogMenu("frame");
             return;
         } else if (message == "On Frame") {
@@ -811,17 +939,22 @@ default {
             return;
         } else if (message == "Close") {
             return; // Exit the listen event, letting the dialog stay closed
-		    }
+        }
         // Re-send the dialog to keep the menu open
         displayDialogMenu("main");
-	  }
+    }
 
     timer() {
         if (inDialogMenu) {
-		        stopListener();
+            stopListener();
         } else {
-            // Periodically check status
-            agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+            if (particles_on) {
+                particles_on = FALSE;
+                ParticlesOff();
+            } else {
+                // Periodically check status
+                agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+            }
         }
     }
 
@@ -841,7 +974,7 @@ default {
                 // Execute this if the click was held
                 // TODO: bring up a dialog menu with configuration options
                 //       e.g. Frame texture, Glow, Tint on/off, Size, Hover text on/off
-		            stopListener();
+                stopListener();
                 pageNumber = 1; // Reset to page 1
                 displayDialogMenu("main");
             } else {
@@ -894,6 +1027,20 @@ default {
             // IM if status has changed
             if (CurrentlyOnline) {
                 if ((!IsOnline) || (queryid == touchDataRequestID)) {
+                    // Add a little pizzazz
+                    if (particles) {
+                        // Particles are enabled
+                        if (!IsOnline) {
+                            // User logged in
+                            llSetTimerEvent(30);
+                        } else {
+                            // Somebody touched me
+                            llSetTimerEvent(10);
+                        }
+                        Sparkle();
+                        particles_on = TRUE;
+                    }
+
                     status_pre = status_pre + "ONLINE. Click to view profile: ";
                     status_msg = status_pre + profileURL;
                     lastLogin = llGetUnixTime();
@@ -932,6 +1079,25 @@ default {
                 }
             } else {
                 if ((IsOnline) || (queryid == touchDataRequestID)) {
+                    // Add a little pizzazz
+                    if (particles) {
+                        // Particles are enabled
+                        if (!IsOnline) {
+                            // User logged in
+                            llSetTimerEvent(30);
+                        } else {
+                            // Somebody touched me
+                            llSetTimerEvent(10);
+                        }
+                        randParticle = (integer)llFrand(2.0);
+                        if (randParticle == 1) {
+                            Bling();
+                        } else {
+                            Hearts();
+                        }
+                        particles_on = TRUE;
+                    }
+
                     status_msg = status_pre + "OFFLINE.";
                     lastLogoff = llGetUnixTime();
                     if (lastLogin <= 0) {
@@ -1007,25 +1173,25 @@ default {
                         TargetDisplayName = value;
                         GetDisplayName = FALSE;
                     } else if (name == "CHECK_INTERVAL") {
-                        CheckInterval = (float)value; 
+                        CheckInterval = (float)value;
                     } else if (name == "GLOW_ONLINE") {
-                        onlineGlow = (float)value; 
+                        onlineGlow = (float)value;
                     } else if (name == "GLOW_OFFLINE") {
-                        offlineGlow = (float)value; 
+                        offlineGlow = (float)value;
                     } else if (name == "HOVER_TEXT") {
-                        HoverText = (integer)value; 
+                        HoverText = (integer)value;
                     } else if (name == "DISCORD_URL") {
                         Discord_URL = value;
                         DiscordRelay = TRUE;
                     } else if (name == "IM_OWNER") {
-                        IMowner = (integer)value; 
+                        IMowner = (integer)value;
                     } else if (name == "OWNER_ONLY") {
-                        ownerOnly = (integer)value; 
+                        ownerOnly = (integer)value;
                     } else if (name == "FRAME_STYLE") {
                         if (llToLower(value) == "rgb") {
-                            UseRGB = TRUE; 
+                            UseRGB = TRUE;
                         } else {
-                            UseRGB = FALSE; 
+                            UseRGB = FALSE;
                         }
                     } else if (name == "COL_ONLINE") {
                         if (IsVector(value)) {
@@ -1057,6 +1223,8 @@ default {
                                 OfflineTexture = value;
                             }
                         }
+                    } else if (name == "PARTICLES") {
+                        particles = (integer)value;
                     }
                 }
                 NotecardLine++;
@@ -1070,7 +1238,7 @@ default {
         }
         else if ( name_query == queryid ) {
             TargetName = data;
-            webprofURL = "https://my.secondlife.com/" + data; 
+            webprofURL = "https://my.secondlife.com/" + data;
         }
     }
 
