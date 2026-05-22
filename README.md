@@ -197,6 +197,8 @@ appearance. These dialog menus can be used to:
 - Enable or disable tinting of the frame border to further indicate online status
 - Enable or disable frame border textures/colors
 - Select frame border online and offline textures
+- Select frame border online and offline tint color
+- Select frame online and offline glow status
 - Start or Stop tracking online status
 
 ## CHANGING THE TRACKED AVATAR
