@@ -52,12 +52,21 @@ key profileRequestID = NULL_KEY;
 // Dialog Menu listener handle, channel, boolean
 integer listenHandle;
 integer dialogChannel;
-integer pageNumber   = 1;
-integer inDialogMenu = FALSE;
-integer isTracking   = TRUE;
-integer particles    = TRUE;
-integer particles_on = FALSE;
-integer randParticle = 0;
+integer pageNumber    = 1;
+integer inDialogMenu  = FALSE;
+integer inDiscordMenu = FALSE;
+integer isTracking    = TRUE;
+integer particles     = TRUE;
+integer particles_on  = FALSE;
+integer randParticle  = 0;
+
+// Dialog Menu listener for Webhook URL management
+string  LSD_KEY       = "discord_webhook";   // linkset data key
+integer MENU_CHAN     = -91827364;          
+integer INPUT_CHAN    = -91827365;          
+float   LISTEN_TTL    = 60.0;                
+integer menuListen   = -1;
+integer inputListen  = -1;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
@@ -71,6 +80,7 @@ string D_COL;
 // Discord uses integer representation of hex color values
 string D_RED   = "16711680";
 string D_GRN   = "65280";
+string D_BLU   = "8900331";
 
 // Common color vectors reference
 // ------------------------------
@@ -226,6 +236,7 @@ profile_timer_init() {
     llSetTimerEvent(CheckInterval);
     // Do an initial check immediately
     agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+    llOwnerSay("[Online Tracker] Ready. Long press to configure.");
 }
 
 init_target() {
@@ -412,8 +423,10 @@ string getElapsedTime(integer secs) {
 }
 
 // Function to send the message to Discord
-// dm is message to send, et is elapsed time since last login/logoff, ols is 0/1 logoff/login
-// sendToDiscord("message to send", "elapsed time since last log", 0 or 1);
+// dm is message to send, et is elapsed time since last login/logoff,
+// ols is 0/1 logoff/login or -1 for message
+//
+// sendToDiscord("message to send", "elapsed time since last log", 0, 1, or -1);
 sendToDiscord(string dm, string et, integer ols, string time) {
     // External URLs
     string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
@@ -423,7 +436,9 @@ sendToDiscord(string dm, string et, integer ols, string time) {
     string ftrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
     ftrURL += "/refs/heads/main/images/stopwatch.png";
     string ftrTXT = "Time of Second Life";
-    if (ols) {
+    if (ols == -1) {
+        ftrTXT += " message";
+    } else if (ols) {
         ftrTXT += " login";
     } else {
         ftrTXT += " logout";
@@ -626,11 +641,11 @@ displayDialogMenu(string menu) {
         menuMessage = menuMessage + "\nBling particles are " + part_status;
         part_status = "Bling " + part_status;
         menuMessage += "\n\nSelect an option";
-        list main_menu = [];
+        list main_menu = [tracking, show_hide, tint_sides, tint_color, use_rgb, part_status, "Discord", "Say Status"];
         if (UseRGB) {
-            main_menu = [tracking, show_hide, tint_sides, tint_color, use_rgb, part_status, "Close"];
+            main_menu += ["Close"];
         } else {
-            main_menu = [tracking, "Pick Frame", show_hide, tint_sides, tint_color, use_rgb, part_status, "Close"];
+            main_menu += ["Pick Frame", "Close"];
         }
         pageMenuName = "main";
         ShowMenu(menuMessage, main_menu);
@@ -673,6 +688,50 @@ ShowMenu(string msg, list fm) {
 }
 //
 // END GENERAL FUNCTIONS
+//
+// DISCORD WEBHOOK MANAGEMENT FUNCTIONS
+//
+sendDiscordContent(string msg) {
+    string url = llLinksetDataRead(LSD_KEY);
+    if (url == "") {
+        llOwnerSay("[Online Tracker] No URL set. Long press the Discord IM Online Tracker and choose 'Discord' first.");
+        return;
+    }
+
+    string escaped = msg;
+    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\\"], []), "\\\\");
+    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\""], []), "\\\"");
+    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\n"], []), "\\n");
+    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\r"], []), "\\r");
+    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\t"], []), "\\t");
+
+    string body = "{\"content\":\"" + escaped + "\"}";
+
+    llHTTPRequest(url,
+        [ HTTP_METHOD,     "POST",
+          HTTP_MIMETYPE,   "application/json",
+          HTTP_VERIFY_CERT, TRUE,
+          HTTP_BODY_MAXLENGTH, 16384 ],
+        body);
+}
+
+showDiscordMenu() {
+    if (menuListen != -1) llListenRemove(menuListen);
+    menuListen = llListen(MENU_CHAN, "", owner, "");
+    inDiscordMenu = TRUE;
+    llSetTimerEvent(LISTEN_TTL);
+
+    string dcMsg = "\n[Discord Webhook Setup]\nClick 'Webhook' to enter your Discord webhook URL";
+    dcMsg += "\n'Test' = Send a test message to your Discord channel";
+    dcMsg += "\n'Clear' = Clear the existing Webhook URL from this script's memory";
+    dcMsg += "\n'Check' = Displays the stored Webhook URL in the owner's chat window";
+    dcMsg += "\n\nChoose an option:",
+    llDialog(owner, dcMsg,
+        ["Webhook", "Test", "Clear", "Check", "Close"],
+        MENU_CHAN);
+}
+//
+// END DISCORD WEBHOOK MANAGEMENT FUNCTIONS
 //
 // PARTICLE FUNCTIONS
 //
@@ -808,144 +867,194 @@ default {
     }
 
     listen(integer channel, string name, key id, string message) {
-        stopListener();
         // Ignore everybody but the owner
         if (id != owner) return;
-        // Handle pagination for multi page menus
-        if (message == "<<< Back") {
-            pageNumber--;
-            displayDialogMenu(pageMenuName);
-            return;
-        } else if (message == "Next >>>") {
-            pageNumber++;
-            displayDialogMenu(pageMenuName);
-            return;
-        } else if (message == "Bling ON") {
-            particles = TRUE;
-            llSetTimerEvent(10);
-            randParticle = (integer)llFrand(2.0);
-            if (randParticle == 1) {
-                Bling();
-            } else {
-                Hearts();
+
+        if (channel == MENU_CHAN) {
+            if (message == "Webhook") {
+                if (inputListen != -1) llListenRemove(inputListen);
+                inputListen = llListen(INPUT_CHAN, "", id, "");
+                inDiscordMenu = TRUE;
+                llSetTimerEvent(LISTEN_TTL);
+
+                llTextBox(id, "\nPaste your Discord webhook URL into box)", INPUT_CHAN);
+            } else if (message == "Test") {
+                D_COL = D_BLU;
+                sendToDiscord(llKey2Name(owner), "Test message from Second Life **" +
+                             TargetDisplayName + "** Online Tracker", -1, llGetTimestamp());
+                llRegionSayTo(id, 0, "[Online Tracker] Test message sent.");
+            } else if (message == "Clear") {
+                llLinksetDataDelete(LSD_KEY);
+                llRegionSayTo(id, 0, "[Online Tracker] Webhook cleared.");
+            } else if (message == "Check") {
+                llRegionSayTo(id, 0, "[Online Tracker] Url is: " + llLinksetDataRead(LSD_KEY));
+            } else if (message == "Close") {
+                displayDialogMenu("main");
+                return; // Exit the listen event
             }
-            particles_on = TRUE;
-        } else if (message == "Bling OFF") {
-            particles = FALSE;
-        } else if (message == "Hover OFF") {
-            HoverText = FALSE;
-            llSetText("", ZERO_VECTOR, 0.0);
-        } else if (message == "Hover ON") {
-            HoverText = TRUE;
-            if (onlineStatus == "ONLINE") {
-                llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, ONLINE_COL, 1.0);
+        } else if (channel == INPUT_CHAN) {
+            string url = llStringTrim(message, STRING_TRIM);
+            integer rc = llLinksetDataWrite(LSD_KEY, url);
+            if (rc == LINKSETDATA_OK) {
+                llRegionSayTo(id, 0, "[Online Tracker] Webhook saved.");
+                Discord_URL = url;
+                DiscordRelay = TRUE;
             } else {
-                llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, OFFLINE_COL, 1.0);
+                llRegionSayTo(id, 0, "[Online Tracker] Save failed (code " + (string)rc + ").");
             }
-        } else if (message == "Start") {
-            llSetTimerEvent(CheckInterval);
-            isTracking = TRUE;
-        } else if (message == "Stop") {
-            displayDialogMenu("stop");
-            return;
-        } else if (message == "YES") {
-            llSetTimerEvent(0);
-            isTracking = FALSE;
-        } else if (message == "Tint ON") {
-            TintSides = TRUE;
-            SetSideTextures();
-        } else if (message == "Tint OFF") {
-            TintSides = FALSE;
-            llSetColor(WHITE, ALL_SIDES);
-        } else if (message == "Texture ON") {
-            UseRGB = FALSE;
-            SetSideTextures();
-        } else if ((message == "Color ON") || (message == "Use Colors")) {
-            UseRGB = TRUE;
-            SetSideTextures();
-        } else if (message == "On Glow") {
-            displayDialogMenu("onGlow");
-            return;
-        } else if (message == "Off Glow") {
-            displayDialogMenu("offGlow");
-            return;
-        } else if (message == "Tint Color") {
-            displayDialogMenu("tint");
-            return;
-        } else if (message == "On Tint") {
-            displayDialogMenu("onTint");
-            return;
-        } else if (message == "Off Tint") {
-            displayDialogMenu("offTint");
-            return;
-        } else if (message == "Pick Frame") {
-            displayDialogMenu("frame");
-            return;
-        } else if (message == "On Frame") {
-            displayDialogMenu("onFrame");
-            return;
-        } else if (message == "Off Frame") {
-            displayDialogMenu("offFrame");
-            return;
-        } else if (llGetSubString(message, -7, -1) == "-Online") {
-            if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
-                OnlineTexture = message;
+
+            if (inputListen != -1) {
+                llListenRemove(inputListen);
+                inputListen = -1;
+            }
+        } else {
+            stopListener();
+            // Handle pagination for multi page menus
+            if (message == "<<< Back") {
+                pageNumber--;
+                displayDialogMenu(pageMenuName);
+                return;
+            } else if (message == "Next >>>") {
+                pageNumber++;
+                displayDialogMenu(pageMenuName);
+                return;
+            } else if (message == "Bling ON") {
+                particles = TRUE;
+                llSetTimerEvent(10);
+                randParticle = (integer)llFrand(2.0);
+                if (randParticle == 1) {
+                    Bling();
+                } else {
+                    Hearts();
+                }
+                particles_on = TRUE;
+            } else if (message == "Bling OFF") {
+                particles = FALSE;
+            } else if (message == "Discord") {
+                showDiscordMenu();
+                return;
+            } else if (message == "Hover OFF") {
+                HoverText = FALSE;
+                llSetText("", ZERO_VECTOR, 0.0);
+            } else if (message == "Hover ON") {
+                HoverText = TRUE;
+                if (onlineStatus == "ONLINE") {
+                    llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, ONLINE_COL, 1.0);
+                } else {
+                    llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, OFFLINE_COL, 1.0);
+                }
+            } else if (message == "Say Status") {
+                touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+            } else if (message == "Start") {
+                llSetTimerEvent(CheckInterval);
+                isTracking = TRUE;
+            } else if (message == "Stop") {
+                displayDialogMenu("stop");
+                return;
+            } else if (message == "YES") {
+                llSetTimerEvent(0);
+                isTracking = FALSE;
+            } else if (message == "Tint ON") {
+                TintSides = TRUE;
                 SetSideTextures();
+            } else if (message == "Tint OFF") {
+                TintSides = FALSE;
+                llSetColor(WHITE, ALL_SIDES);
+            } else if (message == "Texture ON") {
+                UseRGB = FALSE;
+                SetSideTextures();
+            } else if ((message == "Color ON") || (message == "Use Colors")) {
+                UseRGB = TRUE;
+                SetSideTextures();
+            } else if (message == "On Glow") {
+                displayDialogMenu("onGlow");
+                return;
+            } else if (message == "Off Glow") {
+                displayDialogMenu("offGlow");
+                return;
+            } else if (message == "Tint Color") {
+                displayDialogMenu("tint");
+                return;
+            } else if (message == "On Tint") {
+                displayDialogMenu("onTint");
+                return;
+            } else if (message == "Off Tint") {
+                displayDialogMenu("offTint");
+                return;
+            } else if (message == "Pick Frame") {
                 displayDialogMenu("frame");
                 return;
-            }
-        } else if (llGetSubString(message, -8, -1) == "-Offline") {
-            if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
-                OfflineTexture = message;
-                SetSideTextures();
-                displayDialogMenu("frame");
+            } else if (message == "On Frame") {
+                displayDialogMenu("onFrame");
                 return;
-            }
-        } else if (llListFindList(glow_menu, [message]) != -1) {
-            float glow_status;
-            if (message == "Glow Off") {
-                glow_status = 0.0;
-            } else {
-                glow_status = (float)message;
-            }
-            if (online_glow) {
-                if (onlineGlow != glow_status) {
-                    onlineGlow = glow_status;
+            } else if (message == "Off Frame") {
+                displayDialogMenu("offFrame");
+                return;
+            } else if (llGetSubString(message, -7, -1) == "-Online") {
+                if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
+                    OnlineTexture = message;
                     SetSideTextures();
+                    displayDialogMenu("frame");
+                    return;
                 }
-            } else {
-                if (offlineGlow != glow_status) {
-                    offlineGlow = glow_status;
+            } else if (llGetSubString(message, -8, -1) == "-Offline") {
+                if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
+                    OfflineTexture = message;
                     SetSideTextures();
+                    displayDialogMenu("frame");
+                    return;
                 }
+            } else if (llListFindList(glow_menu, [message]) != -1) {
+                float glow_status;
+                if (message == "Glow Off") {
+                    glow_status = 0.0;
+                } else {
+                    glow_status = (float)message;
+                }
+                if (online_glow) {
+                    if (onlineGlow != glow_status) {
+                        onlineGlow = glow_status;
+                        SetSideTextures();
+                    }
+                } else {
+                    if (offlineGlow != glow_status) {
+                        offlineGlow = glow_status;
+                        SetSideTextures();
+                    }
+                }
+                displayDialogMenu("glow");
+                return;
+            } else if (llListFindList(color_menu, [message]) != -1) {
+                integer index = llListFindList(color_menu, [message]);
+                vector cv = llList2Vector(color_vectors, index);
+                if (online_tint) {
+                    if (ONLINE_COL != cv) {
+                        ONLINE_COL = cv;
+                        SetSideTextures();
+                    }
+                } else {
+                    if (OFFLINE_COL != cv) {
+                        OFFLINE_COL = cv;
+                        SetSideTextures();
+                    }
+                }
+                displayDialogMenu("tint");
+                return;
+            } else if (message == "Close") {
+                return; // Exit the listen event, letting the dialog stay closed
             }
-            displayDialogMenu("glow");
-            return;
-        } else if (llListFindList(color_menu, [message]) != -1) {
-            integer index = llListFindList(color_menu, [message]);
-            vector cv = llList2Vector(color_vectors, index);
-            if (online_tint) {
-                if (ONLINE_COL != cv) {
-                    ONLINE_COL = cv;
-                    SetSideTextures();
-                }
-            } else {
-                if (OFFLINE_COL != cv) {
-                    OFFLINE_COL = cv;
-                    SetSideTextures();
-                }
-            }
-            displayDialogMenu("tint");
-            return;
-        } else if (message == "Close") {
-            return; // Exit the listen event, letting the dialog stay closed
+            // Re-send the dialog to keep the menu open
+            displayDialogMenu("main");
         }
-        // Re-send the dialog to keep the menu open
-        displayDialogMenu("main");
     }
 
     timer() {
-        if (inDialogMenu) {
+        if (inDiscordMenu) {
+            if (menuListen  != -1) { llListenRemove(menuListen);  menuListen  = -1; }
+            if (inputListen != -1) { llListenRemove(inputListen); inputListen = -1; }
+            llSetTimerEvent(0.0);
+            inDiscordMenu = FALSE;
+        } else if (inDialogMenu) {
             stopListener();
         } else {
             if (particles_on) {
@@ -959,28 +1068,12 @@ default {
     }
 
     touch_start(integer total_number) {
-        // Start the timer when the user clicks
-        llResetTime();
-    }
-
-    touch_end(integer num_touch) {
         // Check if the first person who touched is the owner
         detectedKey = llDetectedKey(0);
         if (detectedKey == owner) {
-            // Check how long the user held the click
-            float held_time = llGetTime();
-
-            if (held_time > 2.0) {
-                // Execute this if the click was held
-                // TODO: bring up a dialog menu with configuration options
-                //       e.g. Frame texture, Glow, Tint on/off, Size, Hover text on/off
-                stopListener();
-                pageNumber = 1; // Reset to page 1
-                displayDialogMenu("main");
-            } else {
-                // Send a touch request for online status
-                touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
-            }
+            stopListener();
+            pageNumber = 1; // Reset to page 1
+            displayDialogMenu("main");
         } else {
             if (!ownerOnly) {
                 touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
@@ -1180,9 +1273,6 @@ default {
                         offlineGlow = (float)value;
                     } else if (name == "HOVER_TEXT") {
                         HoverText = (integer)value;
-                    } else if (name == "DISCORD_URL") {
-                        Discord_URL = value;
-                        DiscordRelay = TRUE;
                     } else if (name == "IM_OWNER") {
                         IMowner = (integer)value;
                     } else if (name == "OWNER_ONLY") {
@@ -1248,12 +1338,12 @@ default {
          }
     }
 
-    http_response(key req,integer status, list met, string body) {
+    http_response(key req, integer status, list meta, string body) {
         if (req == discordRequestID) {
             discordRequestID = NULL_KEY;
             if (status != 200 && status != 204) // Discord returns 204 No Content on success
             {
-                llOwnerSay("Error sending to Discord. Status: " + (string)status);
+                llOwnerSay("[Online Tracker] HTTP " + (string)status + ": " + body);
             }
         }
         else if (req == profileRequestID) {
