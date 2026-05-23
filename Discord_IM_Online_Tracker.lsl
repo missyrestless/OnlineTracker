@@ -23,11 +23,13 @@
 // 19-May-2026 - Add support for customizing prim textures/colors/glow and pic
 // 21-May-2026 - Add dialog menu for owner configuration with long touch
 // 22-May-2026 - Add menu pagination for dialog menus with > 12 buttons
+// 23-May-2026 - Use linkset datastore to store target UUID and Webhook URL
 //
 // VARIABLES
 //
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
+integer uuidStored = FALSE;
 // Name of the avatar to track
 string TargetName = "";
 string TargetDisplayName = "";
@@ -52,21 +54,26 @@ key profileRequestID = NULL_KEY;
 // Dialog Menu listener handle, channel, boolean
 integer listenHandle;
 integer dialogChannel;
+integer discordChannel;
+integer dmenuChannel;          
+integer targetChannel;
 integer pageNumber    = 1;
 integer inDialogMenu  = FALSE;
 integer inDiscordMenu = FALSE;
+integer inTargetMenu  = FALSE;
 integer isTracking    = TRUE;
 integer particles     = TRUE;
 integer particles_on  = FALSE;
 integer randParticle  = 0;
 
-// Dialog Menu listener for Webhook URL management
-string  LSD_KEY       = "discord_webhook";   // linkset data key
-integer MENU_CHAN     = -91827364;          
-integer INPUT_CHAN    = -91827365;          
-float   LISTEN_TTL    = 60.0;                
-integer menuListen   = -1;
-integer inputListen  = -1;
+// Target Avatar UUID linkset data key
+string  AV_UUID_LSD_KEY = "avatar_uuid";
+// Discord Webhook linkset data key
+string  DISCORD_LSD_KEY = "discord_webhook";
+// Dialog Menu & listener for Webhook URL management
+float   LISTEN_TTL      = 60.0;                
+integer menuListen      = -1;
+integer inputListen     = -1;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
@@ -241,11 +248,16 @@ profile_timer_init() {
 
 init_target() {
     SetDefaultTextures();
-    if ((TargetUuid == NULL_KEY) || (TargetUuid == "target-avatar-uuid")) {
-        if (owner) {
-            TargetUuid = owner;
-        } else {
-            TargetUuid = Default_Uuid;
+    string tg_uuid = llLinksetDataRead(AV_UUID_LSD_KEY);
+    if ((key)tg_uuid) {
+        TargetUuid = (key)tg_uuid;
+    } else {
+        if ((TargetUuid == NULL_KEY) || (TargetUuid == "target-avatar-uuid")) {
+            if (owner) {
+                TargetUuid = owner;
+            } else {
+                TargetUuid = Default_Uuid;
+            }
         }
     }
     // Check if Target UUID is a valid key
@@ -579,31 +591,26 @@ displayDialogMenu(string menu) {
     } else if (menu == "stop") {
         llDialog(owner, "Do you wish to proceed with shutdown of the online tracker?", ["YES", "NO"], dialogChannel);
     } else {
-        string show_hide;
+        list main_menu = [];
         if (HoverText) {
-            show_hide = "Hover OFF";
+            main_menu += ["Hover OFF"];
         } else {
-            show_hide = "Hover ON";
+            main_menu += ["Hover ON"];
         }
-        string tint_sides;
-        string tint_color = " ---- ";
         if (TintSides) {
-            tint_sides = "Tint OFF";
-            tint_color = "Tint Color";
+            main_menu += ["Tint OFF", "Tint Color"];
         } else {
-            tint_sides = "Tint ON";
+            main_menu += ["Tint ON", " ---- "];
         }
-        string use_rgb;
         if (UseRGB) {
-            use_rgb = "Texture ON";
+            main_menu += ["Texture ON"];
         } else {
-            use_rgb = "Color ON";
+            main_menu += ["Color ON"];
         }
-        string tracking;
         if (isTracking) {
-            tracking = "Stop";
+            main_menu += ["Stop"];
         } else {
-            tracking = "Start";
+            main_menu += ["Start"];
         }
         string run_status;
         if (isTracking) {
@@ -635,13 +642,20 @@ displayDialogMenu(string menu) {
         } else {
             part_status = "ON";
         }
+        string discord_status;
+        if (DiscordRelay) {
+            discord_status = "Enabled";
+        } else {
+            discord_status = "Disabled\nClick the Discord button to enter your Webhook URL";
+        }
         menuMessage = "\nOnline Tracker is " + run_status + "\nHover Text is " + hov_status;
+        menuMessage = menuMessage + "\nDiscord messages are " + discord_status;
         menuMessage = menuMessage + "\nFrame Tinting is " + tnt_status;
         menuMessage = menuMessage + "\nFrame is " + bdr_status;
         menuMessage = menuMessage + "\nBling particles are " + part_status;
         part_status = "Bling " + part_status;
         menuMessage += "\n\nSelect an option";
-        list main_menu = [tracking, show_hide, tint_sides, tint_color, use_rgb, part_status, "Discord", "Say Status"];
+        main_menu   += [part_status, "Discord", "Say Status", "Target AVI"];
         if (UseRGB) {
             main_menu += ["Close"];
         } else {
@@ -691,33 +705,9 @@ ShowMenu(string msg, list fm) {
 //
 // DISCORD WEBHOOK MANAGEMENT FUNCTIONS
 //
-sendDiscordContent(string msg) {
-    string url = llLinksetDataRead(LSD_KEY);
-    if (url == "") {
-        llOwnerSay("[Online Tracker] No URL set. Long press the Discord IM Online Tracker and choose 'Discord' first.");
-        return;
-    }
-
-    string escaped = msg;
-    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\\"], []), "\\\\");
-    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\""], []), "\\\"");
-    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\n"], []), "\\n");
-    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\r"], []), "\\r");
-    escaped = llDumpList2String(llParseStringKeepNulls(escaped, ["\t"], []), "\\t");
-
-    string body = "{\"content\":\"" + escaped + "\"}";
-
-    llHTTPRequest(url,
-        [ HTTP_METHOD,     "POST",
-          HTTP_MIMETYPE,   "application/json",
-          HTTP_VERIFY_CERT, TRUE,
-          HTTP_BODY_MAXLENGTH, 16384 ],
-        body);
-}
-
 showDiscordMenu() {
     if (menuListen != -1) llListenRemove(menuListen);
-    menuListen = llListen(MENU_CHAN, "", owner, "");
+    menuListen = llListen(dmenuChannel, "", owner, "");
     inDiscordMenu = TRUE;
     llSetTimerEvent(LISTEN_TTL);
 
@@ -728,7 +718,23 @@ showDiscordMenu() {
     dcMsg += "\n\nChoose an option:";
     llDialog(owner, dcMsg,
         ["Webhook", "Test", "Clear", "Check", "Close"],
-        MENU_CHAN);
+        dmenuChannel);
+}
+
+showTargetMenu() {
+    if (menuListen != -1) llListenRemove(menuListen);
+    menuListen = llListen(dmenuChannel, "", owner, "");
+    inTargetMenu = TRUE;
+    llSetTimerEvent(LISTEN_TTL);
+
+    string tgMsg = "\n[Online Tracker Setup]\nClick 'Input UUID' to enter the Avatar UUID to track";
+    tgMsg += "\n'UUID Test' = Perform an online status check of your configured target Avatar";
+    tgMsg += "\n'UUID Clear' = Clear the existing target Avatar UUID from this script's memory";
+    tgMsg += "\n'UUID Check' = Displays the stored target Avatar UUID in the owner's chat window";
+    tgMsg += "\n\nChoose an option:";
+    llDialog(owner, tgMsg,
+        ["Input UUID", "UUID Test", "UUID Clear", "UUID Check", "Close"],
+        dmenuChannel);
 }
 //
 // END DISCORD WEBHOOK MANAGEMENT FUNCTIONS
@@ -846,15 +852,18 @@ default {
     }
 
     state_entry() {
-        owner = llGetOwner();
-        IsOnline = -1; // Indicates uninitialized online status
-        lastLogoff = 0;
-        lastLogin = 0;
+        owner         = llGetOwner();
+        IsOnline      = -1; // Indicates uninitialized online status
+        lastLogoff    = 0;
+        lastLogin     = 0;
         lastLogoffStr = "";
-        lastLoginStr = "";
+        lastLoginStr  = "";
 
-        // Create random channel within range [-1000000000,-2000000000]
-        dialogChannel = (integer)(llFrand(-1000000000.0) - 1000000000.0);
+        // Create random channels within range [-1000000000,-2000000000]
+        dialogChannel  = (integer)(llFrand(-1000000000.0) - 1000000000.0);
+        dmenuChannel   = (integer)(llFrand(-1000000000.0) - 1000000000.0);
+        discordChannel = (integer)(llFrand(-1000000000.0) - 1000000000.0);
+        targetChannel  = (integer)(llFrand(-1000000000.0) - 1000000000.0);
 
         if (llGetInventoryType(CONFIG_CARD) == INVENTORY_NOTECARD) {
             NotecardLine = 0;
@@ -870,37 +879,72 @@ default {
         // Ignore everybody but the owner
         if (id != owner) return;
 
-        if (channel == MENU_CHAN) {
+        if (channel == dmenuChannel) {
             if (message == "Webhook") {
                 if (inputListen != -1) llListenRemove(inputListen);
-                inputListen = llListen(INPUT_CHAN, "", id, "");
+                inputListen = llListen(discordChannel, "", id, "");
                 inDiscordMenu = TRUE;
                 llSetTimerEvent(LISTEN_TTL);
 
-                llTextBox(id, "\nPaste your Discord webhook URL into box)", INPUT_CHAN);
+                llTextBox(id, "\nPaste your Discord webhook URL into the box)", discordChannel);
             } else if (message == "Test") {
                 D_COL = D_BLU;
                 sendToDiscord(llKey2Name(owner), "Test message from Second Life **" +
                              TargetDisplayName + "** Online Tracker", -1, llGetTimestamp());
                 llRegionSayTo(id, 0, "[Online Tracker] Test message sent.");
             } else if (message == "Clear") {
-                llLinksetDataDelete(LSD_KEY);
+                llLinksetDataDelete(DISCORD_LSD_KEY);
                 llRegionSayTo(id, 0, "[Online Tracker] Webhook cleared.");
             } else if (message == "Check") {
-                llRegionSayTo(id, 0, "[Online Tracker] Url is: " + llLinksetDataRead(LSD_KEY));
+                llRegionSayTo(id, 0, "[Online Tracker] Url is: " + llLinksetDataRead(DISCORD_LSD_KEY));
+            } else if (message == "Input UUID") {
+                if (inputListen != -1) llListenRemove(inputListen);
+                inputListen = llListen(targetChannel, "", id, "");
+                inTargetMenu = TRUE;
+                llSetTimerEvent(LISTEN_TTL);
+
+                llTextBox(id, "\nPaste the target Avatar's UUID into the box)", targetChannel);
+            } else if (message == "UUID Test") {
+                touchDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+                llRegionSayTo(id, 0, "[Online Tracker] Test request sent.");
+            } else if (message == "UUID Clear") {
+                llLinksetDataDelete(AV_UUID_LSD_KEY);
+                uuidStored = FALSE;
+                llRegionSayTo(id, 0, "[Online Tracker] target Avatar UUID cleared.");
+            } else if (message == "UUID Check") {
+                llRegionSayTo(id, 0, "[Online Tracker] target Avatar UUID is: " + llLinksetDataRead(AV_UUID_LSD_KEY));
             } else if (message == "Close") {
                 displayDialogMenu("main");
                 return; // Exit the listen event
             }
-        } else if (channel == INPUT_CHAN) {
+        } else if (channel == discordChannel) {
             string url = llStringTrim(message, STRING_TRIM);
-            integer rc = llLinksetDataWrite(LSD_KEY, url);
+            integer rc = llLinksetDataWrite(DISCORD_LSD_KEY, url);
             if (rc == LINKSETDATA_OK) {
                 llRegionSayTo(id, 0, "[Online Tracker] Webhook saved.");
                 Discord_URL = url;
                 DiscordRelay = TRUE;
             } else {
-                llRegionSayTo(id, 0, "[Online Tracker] Save failed (code " + (string)rc + ").");
+                llRegionSayTo(id, 0, "[Online Tracker] Webhook save failed (code " + (string)rc + ").");
+            }
+
+            if (inputListen != -1) {
+                llListenRemove(inputListen);
+                inputListen = -1;
+            }
+        } else if (channel == targetChannel) {
+            string uuid = llStringTrim(message, STRING_TRIM);
+            if ((key)uuid) {
+                integer rc = llLinksetDataWrite(AV_UUID_LSD_KEY, uuid);
+                if (rc == LINKSETDATA_OK) {
+                    llRegionSayTo(id, 0, "[Online Tracker] Target UUID saved.");
+                    TargetUuid = (key)uuid;
+                    uuidStored = TRUE;
+                } else {
+                    llRegionSayTo(id, 0, "[Online Tracker] Target UUID save failed (code " + (string)rc + ").");
+                }
+            } else {
+                llRegionSayTo(id, 0, "[Online Tracker] " + uuid + " is not a valid UUID.");
             }
 
             if (inputListen != -1) {
@@ -950,6 +994,9 @@ default {
                 isTracking = TRUE;
             } else if (message == "Stop") {
                 displayDialogMenu("stop");
+                return;
+            } else if (message == "Target AVI") {
+                showTargetMenu();
                 return;
             } else if (message == "YES") {
                 llSetTimerEvent(0);
@@ -1054,6 +1101,13 @@ default {
             if (inputListen != -1) { llListenRemove(inputListen); inputListen = -1; }
             llSetTimerEvent(0.0);
             inDiscordMenu = FALSE;
+            stopListener();
+        } else if (inTargetMenu) {
+            if (menuListen  != -1) { llListenRemove(menuListen);  menuListen  = -1; }
+            if (inputListen != -1) { llListenRemove(inputListen); inputListen = -1; }
+            llSetTimerEvent(0.0);
+            inTargetMenu = FALSE;
+            stopListener();
         } else if (inDialogMenu) {
             stopListener();
         } else {
