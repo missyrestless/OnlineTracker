@@ -1,0 +1,57 @@
+The 'Discord IM Online Tracker' monitors the online status of any avatar in Second Life and sends notices of login/logoff to the owner of the object and/or a configured Discord channel.
+
+See https://online.neoman.dev for full documentation and How-To articles.
+
+This document is an abbreviated quick setup guide. See the full setup instructions in the 'Setup Instructions - README' notecard.
+
+SETUP STEPS
+────────────
+
+1. Rez a copy of the "Discord IM Online Tracker (rez me)" object:
+
+   Drag and Drop the "Discord IM Online Tracker (rez me)" object from your inventory to an in-world location.
+
+   The online tracker initially begins to track the owner's online status.
+   To configure an Avatar to track proceed to setup step 2.
+
+2. Edit the "Target_Config" notecard:
+
+   Right click the "Target_Config" notecard in your inventory and select "Open"
+   Replace "target-avatar-uuid" with the UUID of the Avatar you wish to track
+     The UUID of an Avatar is displayed in their Profile as the Key just under their Name
+     Copy and Paste the Key from the Avatar Profile into the Target_Config notecard
+   Save the modified notecard and close the Edit window
+
+3. Drag and Drop the "Target_Config" notecard onto the rezzed Discord IM Online Tracker object
+
+You can repeat this process for as many Avatars as you wish to track, one Avatar per rezzed tracker object.
+
+Each rezzed online tracker object will rename itself with the tracked Avatar display name in its object name.
+
+DISCORD SETUP
+──────────────
+
+In order to be able to communicate from SL to Discord, you need to create a Discord "Webhook". To do this this, you need your own Discord server or a server you co-administer. For testing purposes, we highly recommend to make a new server (it's free!), or at least create a new channel on your existing server.
+
+The Webhook is best created in the Discord web application;  NOT on the mobile app! Please refer to the video - https://www.youtube.com/watch?v=AKOIPxqHYI8 - to see how/where to get the Webhook. Be aware that the way the interface looks might have changed since then.
+
+In the channel list, you will find a small cogwheel icon, that gets you to the channel configuration. Click it, chose "Integrations" and click on "Create Webhook". The name of the Webhook is irrelevant (and won't show up anywhere). All you need is the Webhook URL, which looks like this:
+
+https://discord.com/api/webhooks/aaaaaalotofgibberishandnumbersandsuch
+
+Configuration
+──────────────
+
+Once the Webhook is created, you need to configure the online tracker using the dialog menu.
+
+- Have your previously configured Discord channel Webhook URL ready to copy and paste
+
+- Click the 'Discord IM Online Tracker' in-world object to open the dialog menu.
+
+- Click the 'Discord' button of the Main dialog menu
+
+- Click the 'Webhook' button of the Discord dialog menu
+
+- Copy your Discord channel Webhook URL and paste it into the Input Box
+
+- Click the 'Submit' button
