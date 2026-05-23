@@ -32,14 +32,15 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - The online status of the configured Avatar is indicated by the object's border color, red or green
 - The online status messages contain a clickable link to the Avatar's profile
 - Online status notifications can be monitored when you are offline if Discord is configured
+- Secure setting and storage of your Discord Webhook URL using the linkset datastore
 - The frequency of Online status updates can be configured [Default: every 2 minutes]
 - The in-world object is a beveled frame displaying the tracked Avatar's profile pic and online status
 - The beveled frame can be customized in several ways
     - A custom picture can be configured rather than the Avatar's profile pic
     - Custom textures or texture UUIDs can be provided to texture the bevels on the frame
     - Glow and color of the frame bevels can be customized
-- Touch the object to receive a status update (configurable to owner only or all)
-- Touch and hold for 2 seconds to open a configuration dialog menu (owner only)
+- Touch the object to open a configuration dialog menu (owner only)
+- Users can touch the object to receive a status update if configured (see `OWNER_ONLY` below)
 - Mouse hover over the in-world object will display the online status in the object description
 - Optimized low lag script and only a single prim
 - Particle display when the tracked Avatar logs in or logs out
@@ -126,9 +127,6 @@ you can do so in a variety of ways:
     - Drag and drop a texture to use into the object's Contents and set to the texture name
     - Or set this to a valid texture UUID
     - If not set then the target avatar's profile pic is used
-- `DISCORD_URL` sets the Discord channel Webhook URL
-    - See the section [DISCORD SETUP](#discord-setup) below
-    - If not set then no Discord messages are delivered, only IM to owner or local chat to owner
 - `IM_OWNER` enable or disable IM notifications to owner
     - Set to `TRUE` to enable or `FALSE` to disable
     - If not set then the default behavior is IM notifications to owner are enabled
@@ -192,11 +190,11 @@ END_SETTINGS
 
 ### Configuration Dialog Menu
 
-The owner of the rezzed `Discord IM Online Tracker` object can also configure and customize it by
-left clicking and holding the mouse button down for a few seconds. When the mouse button is released
-after a long click a dialog menu is displayed with buttons to configure the object's behavior and
-appearance. These dialog menus can be used to:
+The owner of the rezzed `Discord IM Online Tracker` object can also configure and customize
+it by clicking the object. A dialog menu is displayed with buttons to configure the object's
+behavior and appearance. These dialog menus can be used to:
 
+- Enter your Discord channel Webhook URL
 - Enable or disable status display in Hover Text
 - Enable or disable tinting of the frame border to further indicate online status
 - Enable or disable frame border textures/colors
@@ -258,22 +256,14 @@ All three versions work fine - just use whichever Discord gives you.
 
 ### Configuration
 
-Once the Webhook is created, you need to configure the online tracker. A configuration notecard is provided. In case it is missing, create a new one with the name "Target_Config".
+Once the Webhook is created, you need to configure the online tracker using the dialog menu.
 
-The notecard contains variable/argument pairs, separated by equal signs " = ". Everything the online tracker does not recognize, gets ignored.
-
-The "Target_Config" notecard contains one variable pertaining to Discord:
-
-```bash
-# Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
-DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-"DISCORD_URL" is simply the setting where you input your Webhook URL from Discord (see above). 
-
-Make sure the Webhook exists and is created for the proper channel. You can change it anytime, if you want to have it transmit to a different channel on your server.
-
-To enable online status messages to be posted to your Discord channel, all that is required is configuring the DISCORD_URL setting in the Target_Config notecard with your Discord channel Webhook URL. Note that only lines above the END_SETTINGS line in the notecard get read - the DISCORD_URL setting must be placed above this line.
+1. Have your previously configured Discord channel Webhook URL ready to copy and paste
+1. Click the `Discord IM Online Tracker` in-world object to open the dialog menu.
+1. Click the `Discord` button of the Main dialog menu
+1. Click the `Webhook` button of the Discord dialog menu
+1. Copy your Discord channel Webhook URL and paste it into the Input Box
+1. Click the `Submit` button
 
 ### Data processing & privacy
 

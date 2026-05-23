@@ -10,9 +10,6 @@ END_SETTINGS
 ## the object's inventory or a valid texture UUID. [default: use target avatar profile pic]
 CUSTOM_PROFILE = uuid-or-name-of-texture
 ##
-## Set to a Discord channel Webhook URL to send online status to Discord [Default: disabled]
-DISCORD_URL = https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-##
 ## Enable or disable Instant Message notification to the owner [Default: TRUE]
 IM_OWNER = TRUE
 ##
