@@ -1,0 +1,1469 @@
+/////////// Discord IM Online Tracker \\\\\\\\\\\\\\
+//                                                //
+//   Sends an IM to the owner and/or posts a      //
+//   message to Discord when the configured       //
+//   Avatar logs on or logs off of Second Life    //
+////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////
+// Copyright (c) 2026 Truth & Beauty Lab          //
+// License: GPLv3                                 //
+// All rights reserved.                           //
+//                                                //
+// Author: Missy Restless missyrestless@gmail.com //
+////////////////////////////////////////////////////
+//
+//nfo_preprocessor_version 0
+//program_version LSL PyOptimizer v0.3.0beta
+//mono
+
+key edefaulttimer = "00000000-0000-0000-0000-000000000000";
+string edefaultchanged = "";
+string System = "";
+float gG = 120;
+string gF = "Unknown";
+string edefaulthttp_response;
+key Pop = "00000000-0000-0000-0000-000000000000";
+key ResumeVoid = "00000000-0000-0000-0000-000000000000";
+key Library = "00000000-0000-0000-0000-000000000000";
+key gA = "00000000-0000-0000-0000-000000000000";
+key edefaulttouch_start = "00000000-0000-0000-0000-000000000000";
+integer gJ;
+integer edefaultstate_entry;
+integer gH = 1;
+integer gN;
+integer edefaultdataserver;
+integer g_ = 1;
+integer gE = 1;
+integer UThreadStackFrame;
+integer gU;
+integer gK = -1;
+integer gR = -1;
+integer gI;
+integer gQ;
+string gO = "";
+string LslLibrary = "";
+string UThread;
+vector gD = <0, 0.122, 0.247>;
+vector gC = <0, 0.455, 0.851>;
+vector gM = <0.498, 0.859, 1>;
+vector edefaultrez = <0.224, 0.8, 0.8>;
+vector gT = <0.239, 0.6, 0.439>;
+vector IsSaveDue = <0.18, 0.8, 0.251>;
+vector LslUserScript = <0.004, 1, 0.439>;
+vector edefaultchat = <1, 0.863, 0>;
+vector gL = <1, 0.522, 0.106>;
+vector gP = <1, 0.255, 0.212>;
+vector gS = <0.522, 0.078, 0.294>;
+vector gB = <0.941, 0.071, 0.745>;
+vector IsRestoring = <0.694, 0.051, 0.788>;
+vector V = <1, 1, 1>;
+vector W = <0.867, 0.867, 0.867>;
+vector X = <0.667, 0.667, 0.667>;
+vector Y = <0.067, 0.067, 0.067>;
+vector Z = gP;
+vector a = IsSaveDue;
+list b = 
+    [ "NAVY"
+    , "BLUE"
+    , "AQUA"
+    , "TEAL"
+    , "OLIVE"
+    , "GREEN"
+    , "LIME"
+    , "YELLOW"
+    , "ORANGE"
+    , "RED"
+    , "MAROON"
+    , "FUCHSIA"
+    , "PURPLE"
+    , "WHITE"
+    , "SILVER"
+    , "GRAY"
+    , "BLACK"
+    ];
+list c = 
+    [ gD
+    , gC
+    , gM
+    , edefaultrez
+    , gT
+    , IsSaveDue
+    , LslUserScript
+    , edefaultchat
+    , gL
+    , gP
+    , gS
+    , gB
+    , IsRestoring
+    , V
+    , W
+    , X
+    , Y
+    ];
+list d = 
+    [ "Glow Off"
+    , "0.05"
+    , "0.1"
+    , "0.15"
+    , "0.2"
+    , "0.25"
+    , "0.3"
+    , "0.35"
+    , "0.4"
+    , "0.45"
+    , "0.5"
+    , "0.55"
+    , "0.6"
+    , "0.65"
+    , "0.7"
+    , "0.75"
+    , "0.8"
+    , "0.85"
+    , "0.9"
+    , "0.95"
+    , "1.0"
+    ];
+string e = "";
+integer f;
+integer g;
+string h = "Mosaic-Online";
+string i = "Mosaic-Offline";
+float j = 0.2;
+float k = 0;
+integer l = -1;
+integer m = 1;
+integer n;
+integer o;
+integer p;
+integer q;
+integer r = 1;
+integer s = 1;
+integer t;
+string u = "";
+key v;
+key w = "00000000-0000-0000-0000-000000000000";
+key x;
+key y;
+string z;
+string _0;
+string A0;
+
+_()
+{
+    integer loc_i;
+    integer loc_faces = llGetNumberOfSides();
+    vector loc_col = <((float)0), ((float)0), ((float)0)>;
+    if (gF == "ONLINE")
+    {
+        loc_col = a;
+        llSetPrimitiveParams((list)20 + 0 + 1);
+    }
+    else
+    {
+        loc_col = Z;
+        llSetPrimitiveParams((list)20 + 0 + 0);
+    }
+    for (loc_i = 1; loc_i < loc_faces; ++loc_i)
+    {
+        if (f)
+        {
+            llSetTexture("5748decc-f629-461c-9a36-a35a221fe21f", loc_i);
+            llSetColor(loc_col, loc_i);
+            if (loc_col == Z)
+            {
+                llSetPrimitiveParams((list)25 + loc_i + k);
+            }
+            else
+            {
+                llSetPrimitiveParams((list)25 + loc_i + j);
+            }
+        }
+        else
+        {
+            if (loc_col == Z)
+            {
+                llSetTexture(i, loc_i);
+                llSetPrimitiveParams((list)25 + loc_i + k);
+            }
+            else
+            {
+                llSetTexture(h, loc_i);
+                llSetPrimitiveParams((list)25 + loc_i + j);
+            }
+            if (g)
+            {
+                llSetColor(loc_col, loc_i);
+            }
+        }
+    }
+}
+
+A()
+{
+    llSetTexture("5748decc-f629-461c-9a36-a35a221fe21f", ((integer)-1));
+    if (g)
+    {
+        llSetColor(V, 0);
+    }
+    else
+    {
+        llSetColor(V, ((integer)-1));
+    }
+}
+
+integer B(string llListen)
+{
+    list loc_split = llParseString2List(llListen, (list)" ", (list)"<" + ">" + ",");
+    if (loc_split != [] ^ 7)
+        return 0;
+    return !((string)((vector)llListen) == (string)((vector)((string)llListInsertList(loc_split, (list)"-", 5))));
+}
+
+C()
+{
+    if (n)
+    {
+        llSetText(System + "\nChecking status...", V, ((float)1));
+    }
+    else
+    {
+        llSetText("", <((float)0), ((float)0), ((float)0)>, ((float)0));
+    }
+    llSetObjectName(System + " Online Tracker");
+    edefaulthttp_response = System + " is " + gF;
+    llSetObjectDesc(edefaulthttp_response);
+    if (e == "")
+    {
+        edefaulttouch_start = llHTTPRequest("https://world.secondlife.com/resident/" + (string)edefaulttimer, (list)0 + "GET", "");
+    }
+    else
+    {
+        llSetTexture(e, 0);
+    }
+    llSetTimerEvent(gG);
+    Library = llRequestAgentData(edefaulttimer, 1);
+    llOwnerSay("[Online Tracker] Ready. Long press to configure.");
+}
+
+D()
+{
+    A();
+    if (edefaulttimer == "00000000-0000-0000-0000-000000000000" | edefaulttimer == "target-avatar-uuid")
+    {
+        if (w)
+        {
+            edefaulttimer = w;
+        }
+        else
+        {
+            edefaulttimer = ((key)"094743dc-cb00-483f-9c35-99232e3a71f1");
+        }
+    }
+    if (edefaulttimer)
+    {
+        llOwnerSay("Discord IM Online Tracker initialization in progress");
+    }
+    else
+    {
+        llOwnerSay("ERROR: Invalid Target Avatar UUID " + (string)edefaulttimer);
+    }
+    _0 = "secondlife:///app/agent/" + (string)edefaulttimer + "/about";
+    y = llRequestUsername(edefaulttimer);
+    if (m)
+    {
+        x = llRequestDisplayName(edefaulttimer);
+    }
+    else
+    {
+        llOwnerSay("Tracking " + _0 + " online status");
+        C();
+    }
+}
+
+string E(string llListen)
+{
+    list loc_months = (list)"" + "January" + "February" + "March" + "April" + "May" + "June" + "July" + "August" + "September" + "October" + "November" + "December";
+    return llList2String(loc_months, (integer)llListen);
+}
+
+string F(string llListen)
+{
+    integer loc_hours = (integer)llGetSubString(llListen, 0, 1);
+    string loc_minutes = llGetSubString(llListen, 2, ((integer)-1));
+    string loc_suffix = " AM";
+    if (11 < loc_hours)
+    {
+        loc_suffix = " PM";
+    }
+    integer loc_h12 = loc_hours % 12;
+    if (!loc_h12)
+        loc_h12 = 12;
+    return (string)loc_h12 + loc_minutes + loc_suffix;
+}
+
+string G(integer llListen)
+{
+    string loc_str = J(((integer)-28800) + llListen);
+    if (llGetSubString(loc_str, ((integer)-3), ((integer)-1)) == "PDT")
+        loc_str = J(((integer)-25200) + llListen);
+    if (llGetSubString(loc_str, ((integer)-3), ((integer)-1)) == "PDT")
+    {
+        loc_str = llReplaceSubString(loc_str, "PDT", "SLT", ((integer)-1));
+    }
+    else
+    {
+        loc_str = llReplaceSubString(loc_str, "PST", "SLT", ((integer)-1));
+    }
+    return loc_str;
+}
+
+integer H(integer llListen)
+{
+    return !(llListen & 3);
+}
+
+integer I(integer llListen, integer llLinksetDataDelete)
+{
+    if (llLinksetDataDelete == 2)
+        return 28 + H(llListen);
+    return 30 + (llLinksetDataDelete + (7 < llLinksetDataDelete) & 1);
+}
+
+string J(integer llListen)
+{
+    integer loc_w;
+    integer loc_month;
+    integer loc_daysinyear;
+    integer loc_mins = llListen / 60;
+    integer loc_hours = loc_mins / 60;
+    loc_mins = loc_mins % 60;
+    integer loc_days = loc_hours / 24;
+    loc_hours = loc_hours % 24;
+    integer loc_DayOfWeek = (4 + loc_days) % 7;
+    integer loc_years = 1970 + 4 * (loc_days / 1461);
+    loc_days = loc_days % 1461;
+    @J_autoGen00001;
+    loc_daysinyear = 365 + H(loc_years);
+    if (!(loc_days < loc_daysinyear))
+    {
+        loc_days = loc_days + -loc_daysinyear;
+        ++loc_years;
+        jump J_autoGen00001;
+    }
+    ++loc_days;
+    for (loc_w = loc_month = 0; loc_w < loc_days; )
+    {
+        loc_days = loc_days + -loc_w;
+        loc_w = I(loc_years, ++loc_month);
+    }
+    string loc_str = (string)loc_years + "-" + llGetSubString("0" + (string)loc_month, ((integer)-2), ((integer)-1)) + "-" + llGetSubString("0" + (string)loc_days, ((integer)-2), ((integer)-1)) + " " + llGetSubString("0" + (string)loc_hours, ((integer)-2), ((integer)-1)) + ":" + llGetSubString("0" + (string)loc_mins, ((integer)-2), ((integer)-1));
+    integer loc_LastSunday = loc_days + -loc_DayOfWeek;
+    string loc_PST_PDT = " PST";
+    if (2006 < loc_years & loc_month == 3 & 7 < loc_LastSunday)
+        loc_PST_PDT = " PDT";
+    if (3 < loc_month)
+        loc_PST_PDT = " PDT";
+    if (10 < loc_month)
+        loc_PST_PDT = " PST";
+    if (loc_years < 2007 & loc_month == 10 & 24 < loc_LastSunday)
+        loc_PST_PDT = " PST";
+    string loc_yearPart = llGetSubString(loc_str, 0, 3);
+    string loc_monthPart = llGetSubString(loc_str, 5, 6);
+    string loc_dayPart = llGetSubString(loc_str, 8, 9);
+    string loc_timePart = llGetSubString(loc_str, ((integer)-5), ((integer)-1));
+    list loc_weekdays = (list)"Sunday" + "Monday" + "Tuesday" + "Wednesday" + "Thursday" + "Friday" + "Saturday";
+    return llList2String(loc_weekdays, loc_DayOfWeek) + ", " + E(loc_monthPart) + " " + loc_dayPart + ", " + loc_yearPart + ", " + F(loc_timePart) + loc_PST_PDT;
+}
+
+string K(integer llListen)
+{
+    string loc_timeStr;
+    integer loc_days;
+    integer loc_hours;
+    integer loc_minutes;
+    if (86399 < llListen)
+    {
+        loc_days = llFloor(llListen / 86400);
+        llListen = llListen % 86400;
+        loc_timeStr = loc_timeStr + ((string)loc_days + " day");
+        if (1 < loc_days)
+        {
+            loc_timeStr = loc_timeStr + "s";
+        }
+        if (0 < llListen)
+        {
+            loc_timeStr = loc_timeStr + ", ";
+        }
+    }
+    if (3599 < llListen)
+    {
+        loc_hours = llFloor(llListen / 3600);
+        llListen = llListen % 3600;
+        loc_timeStr = loc_timeStr + ((string)loc_hours + " hour");
+        if (~-loc_hours)
+        {
+            loc_timeStr = loc_timeStr + "s";
+        }
+        if (0 < llListen)
+        {
+            loc_timeStr = loc_timeStr + ", ";
+        }
+    }
+    if (59 < llListen)
+    {
+        loc_minutes = llFloor(llListen / 60);
+        llListen = llListen % 60;
+        loc_timeStr = loc_timeStr + ((string)loc_minutes + " minute");
+        if (~-loc_minutes)
+        {
+            loc_timeStr = loc_timeStr + "s";
+        }
+        if (0 < llListen)
+        {
+            loc_timeStr = loc_timeStr + ", ";
+        }
+    }
+    if (0 < llListen)
+    {
+        loc_timeStr = loc_timeStr + ((string)llListen + " second");
+        if (~-llListen)
+        {
+            loc_timeStr = loc_timeStr + "s";
+        }
+    }
+    return loc_timeStr;
+}
+
+L(string llListen, string llLinksetDataDelete, integer llListInsertList, string llList2String)
+{
+    string loc_ftrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
+    loc_ftrURL = loc_ftrURL + "/refs/heads/main/images/stopwatch.png";
+    string loc_ftrTXT = "Time of Second Life";
+    if (~llListInsertList)
+        if (llListInsertList)
+        {
+            loc_ftrTXT = loc_ftrTXT + " login";
+        }
+        else
+        {
+            loc_ftrTXT = loc_ftrTXT + " logout";
+        }
+    else
+    {
+        loc_ftrTXT = loc_ftrTXT + " message";
+    }
+    string loc_json = "{ \"avatar_url\": \"https://my-secondlife-agni.akamaized.net/users/" + edefaultchanged + "/thumb_sl_image.png\", \"username\": \"Second Life Online Tracker\", \"embeds\": [ { \"title\": \"" + llListen + "  (click to view profile)\", \"url\": \"" + A0 + "\", \"description\": \"" + llLinksetDataDelete + "\\n\\n🤔 [Online Tracker Documentation](https://online.neoman.dev/)\\n👩 [Second Life Marketplace Listing](https://marketplace.secondlife.com/p/Discord-IM-Online-Tracker/28289130)\", \"color\": \"" + UThread + "\", \"timestamp\": \"" + llList2String + "\", \"footer\": { \"text\": \"" + loc_ftrTXT + "\", \"icon_url\": \"" + loc_ftrURL + "\" } } ] }";
+    gA = llHTTPRequest(u, (list)0 + "POST" + 1 + "application/json" + 3 + 1 + 4 + 1 + 6 + 1, loc_json);
+}
+
+M()
+{
+    llListenRemove(gJ);
+    gN = 0;
+    llSetTimerEvent(gG);
+}
+
+list N(string llListen)
+{
+    list loc_texture_list = [];
+    integer loc_count = llGetInventoryNumber(0);
+    integer loc_i;
+    integer loc_position;
+    string loc_texture_name;
+    for (loc_i = 0; loc_i < loc_count; ++loc_i)
+    {
+        loc_texture_name = llGetInventoryName(0, loc_i);
+        loc_position = llSubStringIndex(loc_texture_name, llListen);
+        if (~loc_position)
+        {
+            loc_texture_list = loc_texture_list + loc_texture_name;
+        }
+    }
+    return loc_texture_list;
+}
+
+O(string llListen)
+{
+    gJ = llListen(edefaultstate_entry, "", w, "");
+    list loc_texture_menu = [];
+    list loc_tint_menu = b;
+    string loc_menuMessage;
+    if (llListen == "frame")
+    {
+        loc_menuMessage = "\nOn Frame = Select online frame texture\nOff Frame = Select offline frame texture";
+        loc_menuMessage = loc_menuMessage + "\nUse Colors = Color frame rather than texture";
+        loc_menuMessage = loc_menuMessage + "\n\nSelect an option";
+        llDialog(w, loc_menuMessage, (list)"On Frame" + "Off Frame" + "Use Colors" + "Main Menu" + "Close", edefaultstate_entry);
+    }
+    else if (llListen == "onFrame")
+    {
+        loc_texture_menu = N("Online");
+        if (loc_texture_menu != [])
+        {
+            loc_texture_menu = loc_texture_menu + "Main Menu" + "Close";
+            loc_menuMessage = "\nCurrent online texture is " + h + "\n\nSelect an online texture";
+            z = "onFrame";
+            P(loc_menuMessage, loc_texture_menu);
+        }
+    }
+    else if (llListen == "offFrame")
+    {
+        loc_texture_menu = N("Offline");
+        if (loc_texture_menu != [])
+        {
+            loc_texture_menu = loc_texture_menu + "Main Menu" + "Close";
+            loc_menuMessage = "\nCurrent offline texture is " + i + "\n\nSelect an offline texture";
+            z = "offFrame";
+            P(loc_menuMessage, loc_texture_menu);
+        }
+    }
+    else if (llListen == "glow")
+    {
+        loc_menuMessage = "\nOn Glow = Select online glow status\nOff Glow = Select offline glow status";
+        loc_menuMessage = loc_menuMessage + "\n\nSelect an option";
+        llDialog(w, loc_menuMessage, (list)"On Glow" + "Off Glow" + "Main Menu" + "Close", edefaultstate_entry);
+    }
+    else if (llListen == "onGlow")
+    {
+        o = 1;
+        d = d + "Main Menu" + "Close";
+        loc_menuMessage = "\nCurrent online glow status is " + (string)j + "\n\nSelect online glow";
+        z = "onGlow";
+        P(loc_menuMessage, d);
+    }
+    else if (llListen == "offGlow")
+    {
+        o = 0;
+        d = d + "Main Menu" + "Close";
+        loc_menuMessage = "\nCurrent offline glow status is " + (string)k + "\n\nSelect offline glow";
+        z = "offGlow";
+        P(loc_menuMessage, d);
+    }
+    else if (llListen == "tint")
+    {
+        loc_menuMessage = "\nOn Tint = Select online tint color\nOff Tint = Select offline tint color";
+        loc_menuMessage = loc_menuMessage + "\n\nSelect an option";
+        llDialog(w, loc_menuMessage, (list)"On Tint" + "Off Tint" + "Main Menu" + "Close", edefaultstate_entry);
+    }
+    else if (llListen == "onTint")
+    {
+        p = 1;
+        loc_tint_menu = loc_tint_menu + "Main Menu" + "Close";
+        integer loc_vIndex = llListFindList(c, (list)a);
+        if (~loc_vIndex)
+        {
+            string loc_cn = llList2String(b, loc_vIndex);
+            loc_menuMessage = "\nCurrent online tint color is " + loc_cn + "\n\nSelect an online tint";
+        }
+        else
+        {
+            loc_menuMessage = "\nSelect an online tint";
+        }
+        z = "onTint";
+        P(loc_menuMessage, loc_tint_menu);
+    }
+    else if (llListen == "offTint")
+    {
+        p = 0;
+        loc_tint_menu = loc_tint_menu + "Main Menu" + "Close";
+        loc_menuMessage = "\nCurrent offline tint color is " + (string)Z + "\n\nSelect an offline tint";
+        z = "offTint";
+        P(loc_menuMessage, loc_tint_menu);
+    }
+    else if (llListen == "stop")
+    {
+        llDialog(w, "Do you wish to proceed with shutdown of the online tracker?", (list)"YES" + "NO", edefaultstate_entry);
+    }
+    else
+    {
+        string loc_show_hide;
+        if (n)
+        {
+            loc_show_hide = "Hover OFF";
+        }
+        else
+        {
+            loc_show_hide = "Hover ON";
+        }
+        string loc_tint_sides;
+        string loc_tint_color = " ---- ";
+        if (g)
+        {
+            loc_tint_sides = "Tint OFF";
+            loc_tint_color = "Tint Color";
+        }
+        else
+        {
+            loc_tint_sides = "Tint ON";
+        }
+        string loc_use_rgb;
+        if (f)
+        {
+            loc_use_rgb = "Texture ON";
+        }
+        else
+        {
+            loc_use_rgb = "Color ON";
+        }
+        string loc_tracking;
+        if (g_)
+        {
+            loc_tracking = "Stop";
+        }
+        else
+        {
+            loc_tracking = "Start";
+        }
+        string loc_run_status;
+        if (g_)
+        {
+            loc_run_status = "tracking " + System;
+        }
+        else
+        {
+            loc_run_status = "STOPPED";
+        }
+        string loc_hov_status;
+        if (n)
+        {
+            loc_hov_status = "Enabled";
+        }
+        else
+        {
+            loc_hov_status = "Disabled";
+        }
+        string loc_tnt_status;
+        if (g)
+        {
+            loc_tnt_status = "Enabled";
+        }
+        else
+        {
+            loc_tnt_status = "Disabled";
+        }
+        string loc_bdr_status;
+        if (f)
+        {
+            loc_bdr_status = "Color";
+        }
+        else
+        {
+            loc_bdr_status = "Texture";
+        }
+        string loc_part_status;
+        if (gE)
+        {
+            loc_part_status = "OFF";
+        }
+        else
+        {
+            loc_part_status = "ON";
+        }
+        loc_menuMessage = "\nOnline Tracker is " + loc_run_status + "\nHover Text is " + loc_hov_status;
+        loc_menuMessage = loc_menuMessage + "\nFrame Tinting is " + loc_tnt_status;
+        loc_menuMessage = loc_menuMessage + "\nFrame is " + loc_bdr_status;
+        loc_menuMessage = loc_menuMessage + "\nBling particles are " + loc_part_status;
+        loc_part_status = "Bling " + loc_part_status;
+        loc_menuMessage = loc_menuMessage + "\n\nSelect an option";
+        list loc_main_menu = (list)loc_tracking + loc_show_hide + loc_tint_sides + loc_tint_color + loc_use_rgb + loc_part_status + "Discord" + "Say Status";
+        if (f)
+        {
+            loc_main_menu = loc_main_menu + "Close";
+        }
+        else
+        {
+            loc_main_menu = loc_main_menu + "Pick Frame" + "Close";
+        }
+        z = "main";
+        P(loc_menuMessage, loc_main_menu);
+    }
+    gN = 1;
+    llSetTimerEvent(60);
+}
+
+P(string llListen, list llLinksetDataDelete)
+{
+    integer loc_list_length = llLinksetDataDelete != [];
+    if (12 < loc_list_length)
+    {
+        integer loc_totalPages = loc_list_length / 10 + !!(loc_list_length % 10);
+        if (gH < 1)
+            gH = 1;
+        if (loc_totalPages < gH)
+            gH = loc_totalPages;
+        integer loc_start = (~-gH) * 10;
+        integer loc_end = 9 + loc_start;
+        list loc_displayList = llList2List(llLinksetDataDelete, loc_start, loc_end);
+        if (1 < loc_totalPages)
+        {
+            if (1 < gH)
+                loc_displayList = loc_displayList + "<<< Back";
+            if (gH < loc_totalPages)
+                loc_displayList = loc_displayList + "Next >>>";
+        }
+        llDialog(w, llListen + " (Page " + (string)gH + " of " + (string)loc_totalPages + "):", loc_displayList, edefaultstate_entry);
+    }
+    else
+    {
+        llDialog(w, llListen, llLinksetDataDelete, edefaultstate_entry);
+    }
+}
+
+Q()
+{
+    if (~gK)
+        llListenRemove(gK);
+    gK = llListen(((integer)-91827364), "", w, "");
+    edefaultdataserver = 1;
+    llSetTimerEvent(((float)60));
+    string loc_dcMsg = "\n[Discord Webhook Setup]\nClick 'Webhook' to enter your Discord webhook URL";
+    loc_dcMsg = loc_dcMsg + "\n'Test' = Send a test message to your Discord channel";
+    loc_dcMsg = loc_dcMsg + "\n'Clear' = Clear the existing Webhook URL from this script's memory";
+    loc_dcMsg = loc_dcMsg + "\n'Check' = Displays the stored Webhook URL in the owner's chat window";
+    loc_dcMsg = loc_dcMsg + "\n\nChoose an option:";
+    llDialog(w, loc_dcMsg, (list)"Webhook" + "Test" + "Clear" + "Check" + "Close", ((integer)-91827364));
+}
+
+R()
+{
+    llParticleSystem([]);
+}
+
+S()
+{
+    R();
+    llParticleSystem((list)0 + 299 + 9 + 2 + 1 + <((float)1), 0.5, ((float)0)> + 3 + <((float)0), ((float)0), ((float)1)> + 2 + ((float)1) + 4 + 0.2 + 5 + <0.5, 0.5, ((float)0)> + 6 + <((float)2), ((float)2), ((float)0)> + 7 + ((float)3) + 13 + 0.5 + 15 + 2 + 17 + ((float)1) + 18 + ((float)3));
+}
+
+T()
+{
+    R();
+    llParticleSystem((list)12 + "5b3f3df0-b20b-5dc4-b49e-377c5805a0e3" + 5 + <0.1, 0.1, ((float)0)> + 6 + <0.4, 0.4, ((float)0)> + 2 + ((float)1) + 4 + 0.5 + 15 + 2 + 13 + 0.5 + 7 + ((float)2) + 19 + ((float)0) + 9 + 2 + 17 + 0.5 + 18 + ((float)2) + 16 + ((float)0) + 22 + 0.15707963 + 23 + 0.15707963 + 21 + <((float)0), ((float)0), ((float)0)> + 8 + <((float)0), ((float)0), ((float)0)> + 20 + ((key)"") + 0 + 299);
+}
+
+U()
+{
+    R();
+    llParticleSystem((list)5 + <((float)0), 0.2, ((float)0)> + 6 + <0.4, ((float)0), ((float)0)> + 1 + <0.5, ((float)1), ((float)0)> + 3 + <((float)0), ((float)0), ((float)1)> + 2 + ((float)1) + 4 + 0.2 + 15 + 2 + 13 + 0.05 + 7 + 0.3 + 19 + ((float)0) + 9 + 8 + 17 + 0.1 + 18 + 0.1 + 16 + 0.5 + 22 + ((float)0) + 23 + 3.1415927 + 21 + <((float)0), ((float)0), ((float)0)> + 8 + <((float)0), ((float)0), ((float)-0.1)> + 0 + 259);
+}
+
+default
+{
+    on_rez(integer llListen)
+    {
+        llResetScript();
+    }
+
+    state_entry()
+    {
+        w = llGetOwner();
+        l = ((integer)-1);
+        gI = 0;
+        gQ = 0;
+        LslLibrary = "";
+        gO = "";
+        edefaultstate_entry = (integer)(((float)-1000000000) + llFrand(((float)-1000000000)));
+        if (llGetInventoryType("Target_Config") ^ 7)
+        {
+            llOwnerSay("Configuration notecard missing, using defaults.");
+            D();
+        }
+        else
+        {
+            q = 0;
+            v = llGetNotecardLine("Target_Config", q);
+        }
+    }
+
+    listen(integer llListen, string llLinksetDataDelete, key llListInsertList, string llList2String)
+    {
+        if (!(llListInsertList == w))
+            return;
+        if (llListen ^ ((integer)-91827364))
+            if (llListen ^ ((integer)-91827365))
+            {
+                M();
+                if (llList2String == "<<< Back")
+                {
+                    --gH;
+                    O(z);
+                    return;
+                }
+                else if (llList2String == "Next >>>")
+                {
+                    ++gH;
+                    O(z);
+                    return;
+                }
+                else if (llList2String == "Bling ON")
+                {
+                    gE = 1;
+                    llSetTimerEvent(10);
+                    gU = (integer)llFrand(((float)2));
+                    if (~-gU)
+                    {
+                        T();
+                    }
+                    else
+                    {
+                        S();
+                    }
+                    UThreadStackFrame = 1;
+                }
+                else if (llList2String == "Bling OFF")
+                {
+                    gE = 0;
+                }
+                else if (llList2String == "Discord")
+                {
+                    Q();
+                    return;
+                }
+                else if (llList2String == "Hover OFF")
+                {
+                    n = 0;
+                    llSetText("", <((float)0), ((float)0), ((float)0)>, ((float)0));
+                }
+                else if (llList2String == "Hover ON")
+                {
+                    n = 1;
+                    if (gF == "ONLINE")
+                    {
+                        llSetText(System + "\nStatus: " + gF, a, ((float)1));
+                    }
+                    else
+                    {
+                        llSetText(System + "\nStatus: " + gF, Z, ((float)1));
+                    }
+                }
+                else if (llList2String == "Say Status")
+                {
+                    Pop = llRequestAgentData(edefaulttimer, 1);
+                }
+                else if (llList2String == "Start")
+                {
+                    llSetTimerEvent(gG);
+                    g_ = 1;
+                }
+                else if (llList2String == "Stop")
+                {
+                    O("stop");
+                    return;
+                }
+                else if (llList2String == "YES")
+                {
+                    llSetTimerEvent(0);
+                    g_ = 0;
+                }
+                else if (llList2String == "Tint ON")
+                {
+                    g = 1;
+                    _();
+                }
+                else if (llList2String == "Tint OFF")
+                {
+                    g = 0;
+                    llSetColor(V, ((integer)-1));
+                }
+                else if (llList2String == "Texture ON")
+                {
+                    f = 0;
+                    _();
+                }
+                else if (llList2String == "Color ON" | llList2String == "Use Colors")
+                {
+                    f = 1;
+                    _();
+                }
+                else if (llList2String == "On Glow")
+                {
+                    O("onGlow");
+                    return;
+                }
+                else if (llList2String == "Off Glow")
+                {
+                    O("offGlow");
+                    return;
+                }
+                else if (llList2String == "Tint Color")
+                {
+                    O("tint");
+                    return;
+                }
+                else if (llList2String == "On Tint")
+                {
+                    O("onTint");
+                    return;
+                }
+                else if (llList2String == "Off Tint")
+                {
+                    O("offTint");
+                    return;
+                }
+                else if (llList2String == "Pick Frame")
+                {
+                    O("frame");
+                    return;
+                }
+                else if (llList2String == "On Frame")
+                {
+                    O("onFrame");
+                    return;
+                }
+                else if (llList2String == "Off Frame")
+                {
+                    O("offFrame");
+                    return;
+                }
+                else if (llGetSubString(llList2String, ((integer)-7), ((integer)-1)) == "-Online")
+                {
+                    if (!llGetInventoryType(llList2String))
+                    {
+                        h = llList2String;
+                        _();
+                        O("frame");
+                        return;
+                    }
+                }
+                else if (llGetSubString(llList2String, ((integer)-8), ((integer)-1)) == "-Offline")
+                {
+                    if (!llGetInventoryType(llList2String))
+                    {
+                        i = llList2String;
+                        _();
+                        O("frame");
+                        return;
+                    }
+                }
+                else if (~llListFindList(d, (list)llList2String))
+                {
+                    float loc_glow_status = ((float)0);
+                    if (llList2String == "Glow Off")
+                    {
+                        loc_glow_status = ((float)0);
+                    }
+                    else
+                    {
+                        loc_glow_status = (float)llList2String;
+                    }
+                    if (o)
+                    {
+                        if (!(j == loc_glow_status))
+                        {
+                            j = loc_glow_status;
+                            _();
+                        }
+                    }
+                    else
+                    {
+                        if (!(k == loc_glow_status))
+                        {
+                            k = loc_glow_status;
+                            _();
+                        }
+                    }
+                    O("glow");
+                    return;
+                }
+                else if (~llListFindList(b, (list)llList2String))
+                {
+                    integer loc_index = llListFindList(b, (list)llList2String);
+                    vector loc_cv = llList2Vector(c, loc_index);
+                    if (p)
+                    {
+                        if (!(a == loc_cv))
+                        {
+                            a = loc_cv;
+                            _();
+                        }
+                    }
+                    else
+                    {
+                        if (!(Z == loc_cv))
+                        {
+                            Z = loc_cv;
+                            _();
+                        }
+                    }
+                    O("tint");
+                    return;
+                }
+                else if (llList2String == "Close")
+                {
+                    return;
+                }
+                O("main");
+            }
+            else
+            {
+                string loc_url = llStringTrim(llList2String, 3);
+                integer loc_rc = llLinksetDataWrite("discord_webhook", loc_url);
+                if (loc_rc)
+                {
+                    llRegionSayTo(llListInsertList, 0, "[Online Tracker] Save failed (code " + (string)loc_rc + ").");
+                }
+                else
+                {
+                    llRegionSayTo(llListInsertList, 0, "[Online Tracker] Webhook saved.");
+                    u = loc_url;
+                    t = 1;
+                }
+                if (~gR)
+                {
+                    llListenRemove(gR);
+                    gR = ((integer)-1);
+                }
+            }
+        else
+        {
+            if (llList2String == "Webhook")
+            {
+                if (~gR)
+                    llListenRemove(gR);
+                gR = llListen(((integer)-91827365), "", llListInsertList, "");
+                edefaultdataserver = 1;
+                llSetTimerEvent(((float)60));
+                llTextBox(llListInsertList, "\nPaste your Discord webhook URL into box)", ((integer)-91827365));
+            }
+            else if (llList2String == "Test")
+            {
+                UThread = "8900331";
+                L(llKey2Name(w), "Test message from Second Life **" + System + "** Online Tracker", ((integer)-1), llGetTimestamp());
+                llRegionSayTo(llListInsertList, 0, "[Online Tracker] Test message sent.");
+            }
+            else if (llList2String == "Clear")
+            {
+                llLinksetDataDelete("discord_webhook");
+                llRegionSayTo(llListInsertList, 0, "[Online Tracker] Webhook cleared.");
+            }
+            else if (llList2String == "Check")
+            {
+                llRegionSayTo(llListInsertList, 0, "[Online Tracker] Url is: " + llLinksetDataRead("discord_webhook"));
+            }
+            else if (llList2String == "Close")
+            {
+                O("main");
+                return;
+            }
+        }
+    }
+
+    timer()
+    {
+        if (edefaultdataserver)
+        {
+            if (~gK)
+            {
+                llListenRemove(gK);
+                gK = ((integer)-1);
+            }
+            if (~gR)
+            {
+                llListenRemove(gR);
+                gR = ((integer)-1);
+            }
+            llSetTimerEvent(((float)0));
+            edefaultdataserver = 0;
+        }
+        else if (gN)
+        {
+            M();
+        }
+        else
+        {
+            if (UThreadStackFrame)
+            {
+                UThreadStackFrame = 0;
+                R();
+            }
+            else
+            {
+                Library = llRequestAgentData(edefaulttimer, 1);
+            }
+        }
+    }
+
+    touch_start(integer llListen)
+    {
+        ResumeVoid = llDetectedKey(0);
+        if (ResumeVoid == w)
+        {
+            M();
+            gH = 1;
+            O("main");
+        }
+        else
+        {
+            if (!s)
+            {
+                Pop = llRequestAgentData(edefaulttimer, 1);
+            }
+        }
+    }
+
+    dataserver(key llListen, string llLinksetDataDelete)
+    {
+        integer loc_CurrentlyOnline;
+        list loc_stat_cols = (list)"OFFLINE" + "ONLINE" + Z + a;
+        if (llListen == Library | llListen == Pop)
+        {
+            loc_CurrentlyOnline = (integer)llLinksetDataDelete;
+            string loc_elapsedTimeStr;
+            string loc_timeStamp = llGetTimestamp();
+            string loc_status_pre = System + " is now ";
+            string loc_status_msg = "";
+            gF = llList2String(loc_stat_cols, loc_CurrentlyOnline);
+            vector loc_color = llList2Vector(loc_stat_cols, -~-~loc_CurrentlyOnline);
+            edefaulthttp_response = System + " is " + gF;
+            if (!(llGetObjectDesc() == edefaulthttp_response))
+            {
+                llSetObjectDesc(edefaulthttp_response);
+            }
+            _();
+            if (!~l)
+            {
+                if (loc_CurrentlyOnline)
+                {
+                    l = 0;
+                }
+                else
+                {
+                    l = 1;
+                }
+            }
+            if (loc_CurrentlyOnline)
+            {
+                if (!(l & -!(llListen == Pop)))
+                {
+                    if (gE)
+                    {
+                        if (l)
+                        {
+                            llSetTimerEvent(10);
+                        }
+                        else
+                        {
+                            llSetTimerEvent(30);
+                        }
+                        U();
+                        UThreadStackFrame = 1;
+                    }
+                    loc_status_pre = loc_status_pre + "ONLINE. Click to view profile: ";
+                    loc_status_msg = loc_status_pre + _0;
+                    gQ = llGetUnixTime();
+                    if (gI < 1)
+                    {
+                        loc_elapsedTimeStr = "unknown time";
+                    }
+                    else
+                    {
+                        loc_elapsedTimeStr = K(gQ + -gI);
+                        if (!(gO == ""))
+                        {
+                            loc_elapsedTimeStr = loc_elapsedTimeStr + "\nPrevious login: " + gO;
+                        }
+                        loc_status_msg = loc_status_msg + "\nOffline for " + loc_elapsedTimeStr;
+                    }
+                    if ((t | r) & -!(llListen == Pop))
+                    {
+                        if (r)
+                        {
+                            llInstantMessage(w, loc_status_msg);
+                        }
+                        if (t)
+                        {
+                            UThread = "65280";
+                            loc_status_msg = "**" + System + "** is now **ONLINE**";
+                            loc_elapsedTimeStr = llReplaceSubString(loc_elapsedTimeStr, "\nPrevious", "\\nPrevious", ((integer)-1));
+                            L(loc_status_msg, "Offline for " + loc_elapsedTimeStr, 1, loc_timeStamp);
+                        }
+                    }
+                    else
+                    {
+                        if (s)
+                        {
+                            llOwnerSay(loc_status_msg);
+                        }
+                        else
+                        {
+                            llRegionSayTo(ResumeVoid, 0, loc_status_msg);
+                        }
+                    }
+                    if (!l)
+                    {
+                        gO = G(llGetUnixTime());
+                    }
+                }
+            }
+            else
+            {
+                if (l | llListen == Pop)
+                {
+                    if (gE)
+                    {
+                        if (l)
+                        {
+                            llSetTimerEvent(10);
+                        }
+                        else
+                        {
+                            llSetTimerEvent(30);
+                        }
+                        gU = (integer)llFrand(((float)2));
+                        if (~-gU)
+                        {
+                            T();
+                        }
+                        else
+                        {
+                            S();
+                        }
+                        UThreadStackFrame = 1;
+                    }
+                    loc_status_msg = loc_status_pre + "OFFLINE.";
+                    gI = llGetUnixTime();
+                    if (gQ < 1)
+                    {
+                        loc_elapsedTimeStr = "unknown time";
+                    }
+                    else
+                    {
+                        loc_elapsedTimeStr = K(gI + -gQ);
+                        if (!(LslLibrary == ""))
+                        {
+                            loc_elapsedTimeStr = loc_elapsedTimeStr + "\nPrevious logoff: " + LslLibrary;
+                        }
+                    }
+                    if ((t | r) & -!(llListen == Pop))
+                    {
+                        if (r)
+                        {
+                            llInstantMessage(w, loc_status_msg);
+                        }
+                        if (t)
+                        {
+                            UThread = "16711680";
+                            loc_status_msg = "**" + System + "** is now **OFFLINE**";
+                            loc_elapsedTimeStr = llReplaceSubString(loc_elapsedTimeStr, "\nPrevious", "\\nPrevious", ((integer)-1));
+                            L(loc_status_msg, "Online for " + loc_elapsedTimeStr, 0, loc_timeStamp);
+                        }
+                    }
+                    else
+                    {
+                        if (s)
+                        {
+                            llOwnerSay(loc_status_msg);
+                        }
+                        else
+                        {
+                            llRegionSayTo(ResumeVoid, 0, loc_status_msg);
+                        }
+                    }
+                    if (l)
+                    {
+                        LslLibrary = G(llGetUnixTime());
+                    }
+                }
+            }
+            if (n)
+            {
+                llSetText(System + "\nStatus: " + gF, loc_color, ((float)1));
+            }
+            l = loc_CurrentlyOnline;
+        }
+        else if (llListen == v)
+        {
+            string loc_name;
+            string loc_value;
+            list loc_temp;
+            if (!(llLinksetDataDelete == "\n\n\n"))
+            {
+                if (llLinksetDataDelete == "END_SETTINGS")
+                {
+                    D();
+                    return;
+                }
+                if (!(llGetSubString(llLinksetDataDelete, 0, 0) == "#" | llStringTrim(llLinksetDataDelete, 3) == ""))
+                {
+                    loc_temp = llParseString2List(llLinksetDataDelete, (list)"=", []);
+                    loc_name = llStringTrim(llList2String(loc_temp, 0), 3);
+                    loc_value = llStringTrim(llList2String(loc_temp, 1), 3);
+                    if (loc_value == "TRUE")
+                        loc_value = "1";
+                    if (loc_value == "FALSE")
+                        loc_value = "0";
+                    if (loc_name == "TARGET_UUID")
+                    {
+                        edefaulttimer = (key)loc_value;
+                    }
+                    else if (loc_name == "CUSTOM_PROFILE")
+                    {
+                        if (llGetInventoryType(loc_value))
+                        {
+                            if ((key)loc_value)
+                            {
+                                e = loc_value;
+                            }
+                        }
+                        else
+                        {
+                            e = loc_value;
+                        }
+                    }
+                    else if (loc_name == "DISPLAY_NAME")
+                    {
+                        System = loc_value;
+                        m = 0;
+                    }
+                    else if (loc_name == "CHECK_INTERVAL")
+                    {
+                        gG = (float)loc_value;
+                    }
+                    else if (loc_name == "GLOW_ONLINE")
+                    {
+                        j = (float)loc_value;
+                    }
+                    else if (loc_name == "GLOW_OFFLINE")
+                    {
+                        k = (float)loc_value;
+                    }
+                    else if (loc_name == "HOVER_TEXT")
+                    {
+                        n = (integer)loc_value;
+                    }
+                    else if (loc_name == "IM_OWNER")
+                    {
+                        r = (integer)loc_value;
+                    }
+                    else if (loc_name == "OWNER_ONLY")
+                    {
+                        s = (integer)loc_value;
+                    }
+                    else if (loc_name == "FRAME_STYLE")
+                    {
+                        if (llToLower(loc_value) == "rgb")
+                        {
+                            f = 1;
+                        }
+                        else
+                        {
+                            f = 0;
+                        }
+                    }
+                    else if (loc_name == "COL_ONLINE")
+                    {
+                        if (B(loc_value))
+                        {
+                            a = (vector)loc_value;
+                        }
+                    }
+                    else if (loc_name == "COL_OFFLINE")
+                    {
+                        if (B(loc_value))
+                        {
+                            Z = (vector)loc_value;
+                        }
+                    }
+                    else if (loc_name == "TEXTURE_TINT")
+                    {
+                        g = (integer)loc_value;
+                    }
+                    else if (loc_name == "TEXTURE_ONLINE")
+                    {
+                        if (llGetInventoryType(loc_value))
+                        {
+                            if ((key)loc_value)
+                            {
+                                h = loc_value;
+                            }
+                        }
+                        else
+                        {
+                            h = loc_value;
+                        }
+                    }
+                    else if (loc_name == "TEXTURE_OFFLINE")
+                    {
+                        if (llGetInventoryType(loc_value))
+                        {
+                            if ((key)loc_value)
+                            {
+                                i = loc_value;
+                            }
+                        }
+                        else
+                        {
+                            i = loc_value;
+                        }
+                    }
+                    else if (loc_name == "PARTICLES")
+                    {
+                        gE = (integer)loc_value;
+                    }
+                }
+                ++q;
+                v = llGetNotecardLine("Target_Config", q);
+            }
+        }
+        else if (x == llListen)
+        {
+            System = llLinksetDataDelete;
+            llOwnerSay("Tracking " + _0 + " online status");
+            C();
+        }
+        else if (y == llListen)
+        {
+            edefaultchanged = llLinksetDataDelete;
+            A0 = "https://my.secondlife.com/" + llLinksetDataDelete;
+        }
+    }
+
+    changed(integer llListen)
+    {
+        if (llListen & 129)
+        {
+            llResetScript();
+        }
+    }
+
+    http_response(key llListen, integer llLinksetDataDelete, list llListInsertList, string llList2String)
+    {
+        if (llListen == gA)
+        {
+            gA = "00000000-0000-0000-0000-000000000000";
+            if (!(llLinksetDataDelete == 200 | llLinksetDataDelete == 204))
+            {
+                llOwnerSay("[Online Tracker] HTTP " + (string)llLinksetDataDelete + ": " + llList2String);
+            }
+        }
+        else if (llListen == edefaulttouch_start)
+        {
+            integer loc_pre_ind = llSubStringIndex(llList2String, "<meta name=\"imageid\" content=\"");
+            integer loc_pre_len = 30;
+            if (!~loc_pre_ind)
+            {
+                loc_pre_ind = llSubStringIndex(llList2String, "<img alt=\"profile image\" src=\"http://secondlife.com/app/image/");
+                loc_pre_len = 62;
+            }
+            if (~loc_pre_ind)
+            {
+                loc_pre_ind = loc_pre_ind + loc_pre_len;
+                key loc_UUID = llGetSubString(llList2String, loc_pre_ind, 35 + loc_pre_ind);
+                if (loc_UUID == "00000000-0000-0000-0000-000000000000")
+                {
+                    A();
+                }
+                else
+                {
+                    llSetTexture(loc_UUID, 0);
+                }
+            }
+            else
+            {
+                A();
+            }
+            edefaulttouch_start = "00000000-0000-0000-0000-000000000000";
+        }
+    }
+}

@@ -12,9 +12,8 @@ Discord_IM_Online_Tracker.zip
 Discord_IM_Online_Tracker-oss.zip
 Dist
 
-# Compressed/optimized/processed LSL scripts
+# Compressed LSL scripts, OpenSim scripts
 *.lslz
-*.lslo
 *.oss
 
 # Temporary file backups and patch creation

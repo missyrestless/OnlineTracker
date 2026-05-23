@@ -725,7 +725,7 @@ showDiscordMenu() {
     dcMsg += "\n'Test' = Send a test message to your Discord channel";
     dcMsg += "\n'Clear' = Clear the existing Webhook URL from this script's memory";
     dcMsg += "\n'Check' = Displays the stored Webhook URL in the owner's chat window";
-    dcMsg += "\n\nChoose an option:",
+    dcMsg += "\n\nChoose an option:";
     llDialog(owner, dcMsg,
         ["Webhook", "Test", "Clear", "Check", "Close"],
         MENU_CHAN);
