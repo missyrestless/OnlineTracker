@@ -83,6 +83,10 @@ string  OFF_TXT_LSD_KEY  = "offline_texture";
 string  ON_GLOW_LSD_KEY  = "online_glow";
 // Offline glow linkset data key
 string  OFF_GLOW_LSD_KEY = "offline_glow";
+// Online tint linkset data key
+string  ON_TINT_LSD_KEY  = "online_tint";
+// Offline tint linkset data key
+string  OFF_TINT_LSD_KEY = "offline_tint";
 // Texture sides linkset data key
 string  TEXTURE_LSD_KEY  = "texture_sides";
 // Custom profile texture linkset data key
@@ -102,8 +106,10 @@ integer SND_LM_ONLINE_TXT  = 17;
 integer SND_LM_OFFLINE_TXT = 18;
 integer SND_LM_ON_GLOW     = 19;
 integer SND_LM_OFF_GLOW    = 20;
-integer SND_LM_SETSIDE_TXT = 21;
-integer SND_LM_PROFILE_TXT = 22;
+integer SND_LM_ON_TINT     = 21;
+integer SND_LM_OFF_TINT    = 22;
+integer SND_LM_SETSIDE_TXT = 23;
+integer SND_LM_PROFILE_TXT = 24;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
@@ -122,8 +128,9 @@ string D_BLU   = "8900331";
 vector GREEN       = <0.180, 0.800, 0.251>;
 vector RED         = <1.000, 0.255, 0.212>;
 vector WHITE       = <1.000, 1.000, 1.000>;
-vector OFFLINE_COL = RED;
-vector ONLINE_COL  = GREEN;
+
+vector offlineTint = RED;
+vector onlineTint  = GREEN;
 
 // Frame style and textures
 string  ProfileTexture = "";
@@ -135,7 +142,6 @@ float   onlineGlow     = 0.2;
 float   offlineGlow    = 0.0;
 
 integer IsOnline       = -1; // Indicates uninitialized online status
-integer GetDisplayName = TRUE;
 integer HoverText      = FALSE;
 integer online_tint;
 // Should online status be sent to owner as an Instant Message
@@ -164,10 +170,10 @@ SetSideTextures() {
 
     // The prim must be configured with face 0 as the profile pic
     if (onlineStatus == "ONLINE") {
-        col = ONLINE_COL;
+        col = onlineTint;
         llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, TRUE]);
     } else {
-        col = OFFLINE_COL;
+        col = offlineTint;
         llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, FALSE]);
     }
     // Sides and back
@@ -175,13 +181,13 @@ SetSideTextures() {
         if (UseRGB) {
             llSetTexture(WHT_UUID, i);
             llSetColor(col, i);
-            if (col == OFFLINE_COL) {
+            if (col == offlineTint) {
                 llSetPrimitiveParams([PRIM_GLOW, i, offlineGlow]);
             } else {
                 llSetPrimitiveParams([PRIM_GLOW, i, onlineGlow]);
             }
         } else {
-            if (col == OFFLINE_COL) {
+            if (col == offlineTint) {
                 llSetTexture(OfflineTexture, i);
                 llSetPrimitiveParams([PRIM_GLOW, i, offlineGlow]);
             } else {
@@ -320,6 +326,20 @@ GetDatastoreValues() {
     }
     llMessageLinked(LINK_THIS, SND_LM_OFF_GLOW, (string)offlineGlow, "");
 
+    // Online tint
+    linksetValue = llLinksetDataRead(ON_TINT_LSD_KEY);
+    if (linksetValue != "") {
+        onlineTint = (vector)linksetValue;
+    }
+    llMessageLinked(LINK_THIS, SND_LM_ON_TINT, (string)onlineTint, "");
+
+    // Offline tint
+    linksetValue = llLinksetDataRead(OFF_TINT_LSD_KEY);
+    if (linksetValue != "") {
+        offlineTint = (vector)linksetValue;
+    }
+    llMessageLinked(LINK_THIS, SND_LM_OFF_TINT, (string)offlineTint, "");
+
     // Texture or RGB enable/disable
     linksetValue = llLinksetDataRead(TEXTURE_LSD_KEY);
     if ((linksetValue == "0") || (linksetValue == "1")) {
@@ -352,12 +372,7 @@ init_target() {
     GetDatastoreValues();
     profileURL = "secondlife:///app/agent/" + (string)TargetUuid + "/about";
     name_query = llRequestUsername(TargetUuid);
-    if (GetDisplayName) {
-        display_name_query = llRequestDisplayName(TargetUuid);
-    } else {
-        llOwnerSay("Tracking " + profileURL + " online status");
-        profile_timer_init();
-    }
+    display_name_query = llRequestDisplayName(TargetUuid);
 }
 
 string mInt2mStr(string monthInt) {
@@ -838,9 +853,9 @@ default {
             } else if (message == (string)TRUE) {
                 HoverText = TRUE;
                 if (onlineStatus == "ONLINE") {
-                    llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, ONLINE_COL, 1.0);
+                    llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, onlineTint, 1.0);
                 } else {
-                    llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, OFFLINE_COL, 1.0);
+                    llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, offlineTint, 1.0);
                 }
             }
         } else if (num == RCV_LM_BLING) {
@@ -864,10 +879,10 @@ default {
             offlineGlow = (float)message;
             SetSideTextures();
         } else if (num == RCV_LM_ON_TINT) {
-            ONLINE_COL = (vector)message;
+            onlineTint = (vector)message;
             SetSideTextures();
         } else if (num == RCV_LM_OFF_TINT) {
-            OFFLINE_COL = (vector)message;
+            offlineTint = (vector)message;
             SetSideTextures();
         }
     }
@@ -898,7 +913,7 @@ default {
         // Requested data contains the string "0" or "1" for DATA_ONLINE
         // Convert it to an integer and use the boolean as index
         // list index = [   0,       1,     2(0+2), 3(1+2)  ]
-        list stat_cols = ["OFFLINE","ONLINE",OFFLINE_COL,ONLINE_COL];
+        list stat_cols = ["OFFLINE","ONLINE",offlineTint,onlineTint];
         string status_pre = TargetDisplayName + " is now ";
         string status_msg = "";
 

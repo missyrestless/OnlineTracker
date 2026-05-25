@@ -59,9 +59,13 @@ string  OFF_TXT_LSD_KEY  = "offline_texture";
 string  ON_GLOW_LSD_KEY  = "online_glow";
 // Offline glow linkset data key
 string  OFF_GLOW_LSD_KEY = "offline_glow";
+// Online tint linkset data key
+string  ON_TINT_LSD_KEY  = "online_tint";
+// Offline tint linkset data key
+string  OFF_TINT_LSD_KEY = "offline_tint";
 // Texture sides linkset data key
 string  TEXTURE_LSD_KEY  = "texture_sides";
-// Custom profile pic linkset data key
+// Custom profile texture linkset data key
 string  PRO_TXT_LSD_KEY  = "custom_profile";
 //
 // Dialog Menu & listener for Webhook URL management
@@ -89,8 +93,8 @@ vector SILVER   = <0.867, 0.867, 0.867>;
 vector GRAY     = <0.667, 0.667, 0.667>;
 vector BLACK    = <0.067, 0.067, 0.067>;
 
-vector OFFLINE_COL = RED;
-vector ONLINE_COL  = GREEN;
+vector offlineTint = RED;
+vector onlineTint  = GREEN;
 
 list color_menu = ["NAVY", "BLUE", "AQUA", "TEAL", "OLIVE", "GREEN", "LIME", "YELLOW", "ORANGE",
                    "RED", "MAROON", "FUCHSIA", "PURPLE", "WHITE", "SILVER", "GRAY", "BLACK"];
@@ -252,7 +256,7 @@ displayDialogMenu(string menu) {
     } else if (menu == "onTint") {
         online_tint = TRUE;
         tint_menu += ["Main Menu", "Close"];
-        integer vIndex = llListFindList(color_vectors, [ONLINE_COL]);
+        integer vIndex = llListFindList(color_vectors, [onlineTint]);
         if (vIndex != -1) {
             string cn = llList2String(color_menu, vIndex);
             menuMessage = "\nCurrent online tint color is " + cn + "\n\nSelect an online tint";
@@ -263,7 +267,7 @@ displayDialogMenu(string menu) {
     } else if (menu == "offTint") {
         online_tint = FALSE;
         tint_menu += ["Main Menu", "Close"];
-        menuMessage = "\nCurrent offline tint color is " + (string)OFFLINE_COL + "\n\nSelect an offline tint";
+        menuMessage = "\nCurrent offline tint color is " + (string)offlineTint + "\n\nSelect an offline tint";
         ShowMenu(menuMessage, tint_menu);
     } else if (menu == "settings") {
         menuMessage = "\nEnable, disable, and configure appearance and behavior of the Online Tracker";
@@ -278,8 +282,9 @@ displayDialogMenu(string menu) {
         } else {
             mode = "Owner Only";
         }
+        menuMessage += "\n\nShow Conf = Display current configuration values";
         menuMessage += "\n\nSelect an option";
-        list sett_menu = ["Main Menu", "Glow", "Interval", mode];
+        list sett_menu = ["Main Menu", "Show Conf", "Glow", "Interval", mode];
         if (num_Textures("Profile") > 0) {
             sett_menu += ["Custom Pic"];
         }
@@ -333,6 +338,35 @@ displayDialogMenu(string menu) {
     llSetTimerEvent(60);
 }
 
+ShowConf() {
+    string confMsg = "Current Discord IM Online Tracker configuration";
+    confMsg += "\n\nTarget UUID = " + (string)TargetUuid;
+    confMsg += "\nTarget Display Name = " + TargetDisplayName;
+    confMsg += "\nDiscord Webhook URL = " + Discord_URL;
+    confMsg += "\nOnline check interval = " + FormatFloat(CheckInterval) + " seconds";
+    confMsg += "\nOwner Only enable/disable = " + (string)ownerOnly;
+    confMsg += "\nParticle display enable/disable = " + (string)particles;
+    confMsg += "\nHover Text enable/disable = " + (string)HoverText;
+    confMsg += "\nTint enable/disable = " + (string)TintSides;
+    if (UseRGB) {
+        confMsg += "\nTexture or RGB frame = RGB";
+    } else {
+        confMsg += "\nTexture or RGB frame = Texture";
+    }
+    confMsg += "\nOnline texture = " + OnlineTexture;
+    confMsg += "\nOffline texture = " + OfflineTexture;
+    confMsg += "\nOnline tint = " + (string)onlineTint;
+    confMsg += "\nOffline tint = " + (string)offlineTint;
+    confMsg += "\nOnline glow = " + stripTrailingZeros(onlineGlow);
+    confMsg += "\nOffline glow = " + stripTrailingZeros(offlineGlow);
+    if (ProfileTexture == "") {
+        confMsg += "\nCustom profile texture = NONE";
+    } else {
+        confMsg += "\nCustom profile texture = " + ProfileTexture;
+    }
+    llOwnerSay(confMsg);
+}
+
 // Show the specific menu page
 // Pass in the full menu list
 ShowMenu(string msg, list fm) {
@@ -380,6 +414,20 @@ string FormatFloat(float num) {
 
     // Split the string: everything up to the last char + "." + the last char
     return llGetSubString(ret, 0, length - 2) + "." + llGetSubString(ret, -1, -1);
+}
+
+string stripTrailingZeros(string str) {
+    // Only proceed if there is a decimal point to avoid mangling whole numbers like "100"
+    if (llSubStringIndex(str, ".") != -1) {
+        while (llGetSubString(str, -1, -1) == "0") {
+            str = llDeleteSubString(str, -1, -1);
+        }
+        // Optional: Remove the trailing decimal point if it's now the last character
+        if (llGetSubString(str, -1, -1) == ".") {
+            str = llDeleteSubString(str, -1, -1);
+        }
+    }
+    return str;
 }
 
 // Writes the provided key/value pair to the prim's linkset datastore
@@ -662,6 +710,10 @@ default {
             } else if (message == "Pick Frame") {
                 displayDialogMenu("frame");
                 return;
+            } else if (message == "Show Conf") {
+                ShowConf();
+                displayDialogMenu("settings");
+                return;
             } else if (message == "On Frame") {
                 displayDialogMenu("onFrame");
                 return;
@@ -740,11 +792,15 @@ default {
                 integer index = llListFindList(color_menu, [message]);
                 vector cv = llList2Vector(color_vectors, index);
                 if (online_tint) {
-                    ONLINE_COL = cv;
-                    llMessageLinked(LINK_THIS, SND_LM_ON_TINT, (string)cv, "");
+                    rc = linksetDataWrite(id, ON_TINT_LSD_KEY, (string)cv, SND_LM_ON_TINT, "Online tint");
+                    if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                        onlineTint = cv;
+                    }
                 } else {
-                    OFFLINE_COL = cv;
-                    llMessageLinked(LINK_THIS, SND_LM_OFF_TINT, (string)cv, "");
+                    rc = linksetDataWrite(id, OFF_TINT_LSD_KEY, (string)cv, SND_LM_OFF_TINT, "Offline tint");
+                    if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                        offlineTint = cv;
+                    }
                 }
                 displayDialogMenu("tint");
                 return;
@@ -795,8 +851,10 @@ default {
         integer RCV_LM_OFFLINE_TXT = 18;
         integer RCV_LM_ON_GLOW     = 19;
         integer RCV_LM_OFF_GLOW    = 20;
-        integer RCV_LM_SETSIDE_TXT = 21;
-        integer RCV_LM_PROFILE_TXT = 22;
+        integer RCV_LM_ON_TINT     = 21;
+        integer RCV_LM_OFF_TINT    = 22;
+        integer RCV_LM_SETSIDE_TXT = 23;
+        integer RCV_LM_PROFILE_TXT = 24;
 
         if (num == RCV_LM_TARGET_UUID) {
             TargetUuid = id;
@@ -822,6 +880,10 @@ default {
             onlineGlow = message;
         } else if (num == RCV_LM_OFF_GLOW) {
             offlineGlow = message;
+        } else if (num == RCV_LM_ON_TINT) {
+            onlineTint = (vector)message;
+        } else if (num == RCV_LM_OFF_TINT) {
+            offlineTint = (vector)message;
         } else if (num == RCV_LM_SETSIDE_TXT) {
             UseRGB = (integer)message;
         }
