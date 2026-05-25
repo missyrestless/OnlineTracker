@@ -37,7 +37,7 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - The in-world object is a beveled frame displaying the tracked Avatar's profile pic and online status
 - The beveled frame can be customized in several ways
     - A custom picture can be configured rather than the Avatar's profile pic
-    - Custom textures or texture UUIDs can be provided to texture the bevels on the frame
+    - Custom textures can be provided to texture the bevels on the frame
     - Glow and color of the frame bevels can be customized
 - Touch the object to open a configuration dialog menu (owner only)
 - Users can touch the object to receive a status update if configured (see `OWNER_ONLY` below)
@@ -79,6 +79,13 @@ The online tracker initially begins to track the owner's online status.
 
 ### Configure the Avatar you wish to track
 
+To track the online status of an avatar other than the owner you need the avatar's UUID (Key).
+
+Search for the avatar you wish to track using your viewer's Search bar and open the avatar's Profile.
+
+The avatar's UUID is the `Key` field, a string of digits and letters separated by dashes
+(near the top, just below the `Name` field). Copy the avatar's `Key` from their Profile.
+
 - Click the rezzed Online Tracker object
 - A dialog menu will be presented upon owner touch of the object.
 - Click the `Target AVI` button - a menu of options to manage the target Avatar will open
@@ -114,6 +121,7 @@ The owner of the rezzed `Discord IM Online Tracker` object can configure and cus
 - Select frame border online and offline textures
 - Select frame border online and offline tint color
 - Select frame online and offline glow status
+- Select a custom texture to display rather than the tracked avatar's profile pic
 - Start or Stop tracking online status
 
 The default settings for all configuration parameters should work well. However, if you wish to customize the object and its behavior you can do so in a variety of ways:
@@ -137,12 +145,14 @@ The default settings for all configuration parameters should work well. However,
     - Default frame style is `Texture`
 - Set the online texture to use for `Texture` frame style
     - Select from several provided textures or add your own textures to the object contents
-    - Online texture names must include the substring `Online`
+    - Online texture names must end in the substring `-Online`
       - For example, to add the texture `Apple`, rename it to `Apple-Online` and drag it into the object Contents
+    - Select `Settings` -> `Pick Frame` -> `On Frame` to set the texture used for online status
 - Set the offline texture to use for `Texture` frame style
     - Select from several provided textures or add your own textures to the object contents
-    - Offline texture names must include the substring `Offline`
+    - Offline texture names must end in the substring `-Offline`
       - For example, to add the texture `Grape`, rename it to `Grape-Offline` and drag it into the object Contents
+    - Select `Settings` -> `Pick Frame` -> `Off Frame` to set the texture used for offline status
 - Enable or disable tinting of side textures
     - Default: tinting is enabled
 - Set the color vector to use for tinting the sides to indicate online
@@ -158,8 +168,9 @@ The default settings for all configuration parameters should work well. However,
 - Set an alternate picture to use on the main face of the prim
     - Default: the profile picture of the tracked avatar is displayed on prim face 0
     - Drag and Drop a custom texture to display on prim face 0 into the object's Contents
-    - Custom profile texture names must include the substring `Profile`
+    - Custom profile texture names must end in the substring `-Profile`
       - For example, to add the texture `Betty`, rename it to `Betty-Profile` and drag it into the object Contents
+    - Select `Settings` -> `Custom Pic` from the main menu to set the texture displayed on face 0
 
 ## DISCORD SETUP
 
