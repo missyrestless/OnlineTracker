@@ -30,6 +30,7 @@
 //
 // VARIABLES
 //
+string version = "1.1.0";
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
 // Name of the avatar to track
@@ -61,13 +62,29 @@ integer randParticle  = 0;
 // Must match the definitions in Dialog_Menu.lsl
 //
 // Target Avatar UUID linkset data key
-string  AV_UUID_LSD_KEY = "avatar_uuid";
+string  AV_UUID_LSD_KEY  = "avatar_uuid";
 // Online check interval linkset data key
-string  CHK_INT_LSD_KEY = "check_interval";
+string  CHK_INT_LSD_KEY  = "check_interval";
 // Discord Webhook linkset data key
-string  DISCORD_LSD_KEY = "discord_webhook";
+string  DISCORD_LSD_KEY  = "discord_webhook";
 // Owner only linkset data key
-string  OWNER_O_LSD_KEY = "owner_only";
+string  OWNER_O_LSD_KEY  = "owner_only";
+// Bling on/off linkset data key
+string  BLING_LSD_KEY    = "bling_state";
+// Hover Text on/off linkset data key
+string  HOVER_LSD_KEY    = "hover_text";
+// Tint sides on/off linkset data key
+string  TINT_LSD_KEY     = "tint_sides";
+// Online texture linkset data key
+string  ON_TXT_LSD_KEY   = "online_texture";
+// Offline texture linkset data key
+string  OFF_TXT_LSD_KEY  = "offline_texture";
+// Online glow linkset data key
+string  ON_GLOW_LSD_KEY  = "online_glow";
+// Offline glow linkset data key
+string  OFF_GLOW_LSD_KEY = "offline_glow";
+// Texture sides linkset data key
+string  TEXTURE_LSD_KEY  = "texture_sides";
 //
 // Linked Message Numbers
 //
@@ -76,21 +93,14 @@ integer SND_LM_TARGET_UUID = 10;
 integer SND_LM_TARGET_NAME = 11;
 integer SND_LM_CK_INTERVAL = 12;
 integer SND_LM_OWNER_ONLY  = 13;
-//
-// Receive from dialog menu
-integer RCV_LM_SEND_DC_MSG = 100;
-integer RCV_LM_ONLINETOUCH = 101;
-integer RCV_LM_SETSIDE_TXT = 110;
-integer RCV_LM_ONLINE_TXT  = 111;
-integer RCV_LM_OFFLINE_TXT = 112;
-integer RCV_LM_OWNER_ONLY  = 113;
-integer RCV_LM_WEBHOOK_URL = 200;
-integer RCV_LM_TARGET_UUID = 201;
-integer RCV_LM_SET_CHK_VAR = 300;
-integer RCV_LM_SET_TIMER   = 301;
-integer RCV_LM_CLEAR_TIMER = 302;
-integer RCV_LM_HOVER_TEXT  = 310;
-integer RCV_LM_BLING       = 311;
+integer SND_LM_BLING       = 14;
+integer SND_LM_HOVER_TEXT  = 15;
+integer SND_LM_TINT_SIDES  = 16;
+integer SND_LM_ONLINE_TXT  = 17;
+integer SND_LM_OFFLINE_TXT = 18;
+integer SND_LM_ON_GLOW     = 19;
+integer SND_LM_OFF_GLOW    = 20;
+integer SND_LM_SETSIDE_TXT = 21;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
@@ -124,7 +134,6 @@ float   offlineGlow    = 0.0;
 integer IsOnline       = -1; // Indicates uninitialized online status
 integer GetDisplayName = TRUE;
 integer HoverText      = FALSE;
-integer online_glow;
 integer online_tint;
 // Should online status be sent to owner as an Instant Message
 integer IMowner = TRUE;
@@ -207,31 +216,7 @@ integer IsVector(string s) {
     return !((string)((vector)s) == (string)((vector)((string)llListInsertList(split, ["-"], 5))));
 }
 
-profile_timer_init() {
-    if (HoverText) {
-        llSetText(TargetDisplayName + "\nChecking status...", WHITE, 1.0); // Initial hover text
-    } else {
-        // Clear any previously set hover text
-        llSetText("", ZERO_VECTOR, 0.0);
-    }
-    llSetObjectName(TargetDisplayName + " Online Tracker");
-    objectDescription = TargetDisplayName + " is " + onlineStatus;
-    llSetObjectDesc(objectDescription);
-    if (profilePic == "") {
-        profileRequestID = llHTTPRequest("https://world.secondlife.com/resident/" +
-                                        (string)TargetUuid,[HTTP_METHOD,"GET"],"");
-    } else {
-        llSetTexture(profilePic, 0);
-    }
-    // Start monitoring immediately
-    llSetTimerEvent(CheckInterval);
-    // Do an initial check immediately
-    agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
-    llOwnerSay("[Online Tracker] Ready. Touch to configure.");
-}
-
-init_target() {
-    SetDefaultTextures();
+GetDatastoreValues() {
     string linksetValue = llLinksetDataRead(AV_UUID_LSD_KEY);
     if ((key)linksetValue) {
         TargetUuid = (key)linksetValue;
@@ -273,7 +258,91 @@ init_target() {
         llOwnerSay("[Online Tracker] Using default setting of Owner Only");
     }
     llMessageLinked(LINK_THIS, SND_LM_OWNER_ONLY, (string)ownerOnly, "");
-    // Check if value is 0 or 1
+    linksetValue = llLinksetDataRead(BLING_LSD_KEY);
+    if ((linksetValue == "0") || (linksetValue == "1")) {
+        particles = (integer)linksetValue;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Bling");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_BLING, (string)particles, "");
+    linksetValue = llLinksetDataRead(HOVER_LSD_KEY);
+    if ((linksetValue == "0") || (linksetValue == "1")) {
+        HoverText = (integer)linksetValue;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Hover Text");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_HOVER_TEXT, (string)HoverText, "");
+    linksetValue = llLinksetDataRead(TINT_LSD_KEY);
+    if ((linksetValue == "0") || (linksetValue == "1")) {
+        TintSides = (integer)linksetValue;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Tint sides");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_TINT_SIDES, (string)TintSides, "");
+    linksetValue = llLinksetDataRead(ON_TXT_LSD_KEY);
+    if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
+        OnlineTexture = linksetValue;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Online texture");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_ONLINE_TXT, OnlineTexture, "");
+    linksetValue = llLinksetDataRead(OFF_TXT_LSD_KEY);
+    if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
+        OfflineTexture = linksetValue;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Offline texture");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_OFFLINE_TXT, OfflineTexture, "");
+    linksetValue = llLinksetDataRead(ON_GLOW_LSD_KEY);
+    if (linksetValue != "") {
+        onlineGlow = (float)linksetValue;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Online glow");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_ON_GLOW, (string)onlineGlow, "");
+    linksetValue = llLinksetDataRead(OFF_GLOW_LSD_KEY);
+    if (linksetValue != "") {
+        offlineGlow = (float)linksetValue;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Offline glow");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_OFF_GLOW, (string)offlineGlow, "");
+    linksetValue = llLinksetDataRead(TEXTURE_LSD_KEY);
+    if ((linksetValue == "0") || (linksetValue == "1")) {
+        UseRGB = (integer)linksetValue;
+        UseRGB = !UseRGB;
+    } else {
+        llOwnerSay("[Online Tracker] Using default setting for Use textures");
+    }
+    llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, (string)UseRGB, "");
+}
+
+profile_timer_init() {
+    if (HoverText) {
+        llSetText(TargetDisplayName + "\nChecking status...", WHITE, 1.0); // Initial hover text
+    } else {
+        // Clear any previously set hover text
+        llSetText("", ZERO_VECTOR, 0.0);
+    }
+    llSetObjectName(TargetDisplayName + " Online Tracker");
+    objectDescription = TargetDisplayName + " is " + onlineStatus;
+    llSetObjectDesc(objectDescription);
+    if (profilePic == "") {
+        profileRequestID = llHTTPRequest("https://world.secondlife.com/resident/" +
+                                        (string)TargetUuid,[HTTP_METHOD,"GET"],"");
+    } else {
+        llSetTexture(profilePic, 0);
+    }
+    // Start monitoring immediately
+    llSetTimerEvent(CheckInterval);
+    // Do an initial check immediately
+    agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+    llOwnerSay("[Online Tracker] Ready. Touch to configure.");
+}
+
+init_target() {
+    SetDefaultTextures();
+    GetDatastoreValues();
     profileURL = "secondlife:///app/agent/" + (string)TargetUuid + "/about";
     name_query = llRequestUsername(TargetUuid);
     if (GetDisplayName) {
@@ -449,33 +518,36 @@ string getElapsedTime(integer secs) {
 // sendToDiscord("message to send", "elapsed time since last log", 0, 1, or -1);
 sendToDiscord(string dm, string et, integer ols, string time) {
     // External URLs
-    string aviURL = "https://my-secondlife-agni.akamaized.net/users/";
-    string docURL = "https://online.neoman.dev/";
-    string repURL = "https://marketplace.secondlife.com/p/Discord-IM-Online-Tracker/28289130";
+    string aviURL     = "https://my-secondlife-agni.akamaized.net/users/";
+    string docURL     = "https://online.neoman.dev/";
+    string repURL     = "https://marketplace.secondlife.com/p/Discord-IM-Online-Tracker/28289130";
     // Images
-    string ftrURL = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
-    ftrURL += "/refs/heads/main/images/stopwatch.png";
-    string ftrTXT = "Time of Second Life";
+    string footerURL  = "https://raw.githubusercontent.com/missyrestless/OnlineTracker";
+    footerURL        += "/refs/heads/main/images/stopwatch.png";
+    string footerText = "Time of Second Life";
     if (ols == -1) {
-        ftrTXT += " message";
+        footerText += " message";
     } else if (ols) {
-        ftrTXT += " login";
+        footerText += " login";
     } else {
-        ftrTXT += " logout";
+        footerText += " logout";
     }
+    string userName = "Second Life Online Tracker " + version;
 
     // Create the JSON payload, backslashing quotes all over the place
     string json = "{ \"avatar_url\": \"" + aviURL + TargetName + "/thumb_sl_image.png\", " +
-                    "\"username\": \"Second Life Online Tracker\", \"embeds\": [ { " +
-                    "\"title\": \"" + dm + "  (click to view profile)\", " +
-                    "\"url\": \"" + webprofURL + "\", " +
-                    "\"description\": \"" + et + "\\n\\n🤔 [Online Tracker Documentation](" +
-                        docURL + ")\\n👩 [Second Life Marketplace Listing](" + repURL + ")\", " +
-                    "\"color\": \"" + D_COL + "\", " +
-                    "\"timestamp\": \"" + time + "\", " +
-                    "\"footer\": { \"text\": \"" + ftrTXT + "\", " +
-                        "\"icon_url\": \"" + ftrURL + "\" }" +
-             " } ] }";
+                    "\"username\": \"" + userName + "\"," +
+                    "\"embeds\": [ { " +
+                        "\"title\": \"" + dm + "  (click to view profile)\", " +
+                        "\"url\": \"" + webprofURL + "\", " +
+                        "\"description\": \"" + et + "\\n\\n🤔 [Online Tracker Documentation](" +
+                            docURL + ")\\n👩 [Second Life Marketplace Listing](" + repURL + ")\", " +
+                        "\"color\": \"" + D_COL + "\", " +
+                        "\"timestamp\": \"" + time + "\", " +
+                        "\"footer\": { \"text\": \"" + footerText + "\", " +
+                            "\"icon_url\": \"" + footerURL + "\"" +
+                        "}" +
+                  " } ] }";
 
     // Make the HTTP request to the Discord Webhook, sending the JSON payload
     discordRequestID = llHTTPRequest(Discord_URL, [
@@ -674,21 +746,45 @@ default {
         init_target();
     }
 
-    // 100 == Send message string to Discord as message (-1)
-    // 101 == Request online status from a touch event
-    // 110 == Set side textures
-    // 111 == Recieve online texture
-    // 112 == Recieve offline texture
-    // 113 == Recieve owner only setting
-    // 200 == Set webhook URL
-    // 201 == Set Target UUID
-    // 300 == Set Check Interval
-    // 301 == Set Timer Event
-    // 302 == Clear Timer Event
-    // 310 == Set or Clear Hover Text
-    // 311 == Enable or Disable particle display
-    link_message(integer sender, integer num, string message, key id)
-    {
+    // Receive from dialog menu
+    link_message(integer sender, integer num, string message, key id) {
+        // RCV_LM_SEND_DC_MSG = 100  : Send message string to Discord as message (-1)
+        integer RCV_LM_SEND_DC_MSG = 100;
+        // RCV_LM_ONLINETOUCH = 101  : Request online status from a touch event
+        integer RCV_LM_ONLINETOUCH = 101;
+        // RCV_LM_SETSIDE_TXT = 110  : Set side textures
+        integer RCV_LM_SETSIDE_TXT = 110;
+        // RCV_LM_ONLINE_TXT  = 111  : Recieve online texture
+        integer RCV_LM_ONLINE_TXT  = 111;
+        // RCV_LM_OFFLINE_TXT = 112  : Recieve offline texture
+        integer RCV_LM_OFFLINE_TXT = 112;
+        // RCV_LM_OWNER_ONLY  = 113  : Recieve owner only setting
+        integer RCV_LM_OWNER_ONLY  = 113;
+        // RCV_LM_SET_TINT    = 114  : Tint enable/disable
+        integer RCV_LM_SET_TINT    = 114;
+        // RCV_LM_WEBHOOK_URL = 200  : Set webhook URL
+        integer RCV_LM_WEBHOOK_URL = 200;
+        // RCV_LM_TARGET_UUID = 201  : Set Target UUID
+        integer RCV_LM_TARGET_UUID = 201;
+        // RCV_LM_SET_CHK_VAR = 300  : Set Check Interval
+        integer RCV_LM_SET_CHK_VAR = 300;
+        // RCV_LM_SET_TIMER   = 301  : Set Timer Event
+        integer RCV_LM_SET_TIMER   = 301;
+        // RCV_LM_CLEAR_TIMER = 302  : Clear Timer Event
+        integer RCV_LM_CLEAR_TIMER = 302;
+        // RCV_LM_HOVER_TEXT  = 310  : Set or Clear Hover Text
+        integer RCV_LM_HOVER_TEXT  = 310;
+        // RCV_LM_BLING       = 311  : Enable or Disable particle display
+        integer RCV_LM_BLING       = 311;
+        // RCV_LM_ON_GLOW     = 312  : Set online glow status
+        integer RCV_LM_ON_GLOW     = 312;
+        // RCV_LM_OFF_GLOW    = 313  : Set offline glow status
+        integer RCV_LM_OFF_GLOW    = 313;
+        // RCV_LM_ON_TINT     = 314  : Set online tint color
+        integer RCV_LM_ON_TINT     = 314;
+        // RCV_LM_OFF_TINT    = 315  : Set offline tint color
+        integer RCV_LM_OFF_TINT    = 315;
+
         if (num == RCV_LM_SEND_DC_MSG) {
             D_COL = D_BLU;
             sendToDiscord(llKey2Name(owner), message, -1, llGetTimestamp());
@@ -701,22 +797,31 @@ default {
                 llMessageLinked(LINK_THIS, SND_LM_TARGET_UUID, "", TargetUuid);
                 llRegionSayTo(id, 0, "[Online Tracker] TargetUuid mismatch. Try again.");
             }
-        } else if (num == RCV_LM_SETSIDE_TXT) {
-            if (message == "Tint ON") {
+        } else if (num == RCV_LM_SET_TINT) {
+            if (message == (string)TRUE) {
                 SetSideTextures();
                 TintSides = TRUE;
-            } else if (message == "Tint OFF") {
+            } else if (message == (string)FALSE) {
                 TintSides = FALSE;
                 llSetColor(WHITE, ALL_SIDES);
-            } else if (message == "Texture ON") {
+            }
+        } else if (num == RCV_LM_SETSIDE_TXT) {
+            if (message == (string)TRUE) {
                 UseRGB = FALSE;
-            } else if ((message == "Color ON") || (message == "Use Colors")) {
+            } else if (message == (string)FALSE) {
                 UseRGB = TRUE;
             }
+            SetSideTextures();
         } else if (num == RCV_LM_ONLINE_TXT) {
             OnlineTexture = message;
+            if (!UseRGB) {
+                SetSideTextures();
+            }
         } else if (num == RCV_LM_OFFLINE_TXT) {
             OfflineTexture = message;
+            if (!UseRGB) {
+                SetSideTextures();
+            }
         } else if (num == RCV_LM_OWNER_ONLY) {
             ownerOnly = (integer)message;
         } else if (num == RCV_LM_WEBHOOK_URL) {
@@ -732,10 +837,10 @@ default {
         } else if (num == RCV_LM_CLEAR_TIMER) {
             llSetTimerEvent(0);
         } else if (num == RCV_LM_HOVER_TEXT) {
-            if (message == "Hover OFF") {
+            if (message == (string)FALSE) {
                 HoverText = FALSE;
                 llSetText("", ZERO_VECTOR, 0.0);
-            } else if (message == "Hover ON") {
+            } else if (message == (string)TRUE) {
                 HoverText = TRUE;
                 if (onlineStatus == "ONLINE") {
                     llSetText(TargetDisplayName + "\nStatus: " + onlineStatus, ONLINE_COL, 1.0);
@@ -744,7 +849,7 @@ default {
                 }
             }
         } else if (num == RCV_LM_BLING) {
-            if (message == "Bling ON") {
+            if (message == (string)TRUE) {
                 particles = TRUE;
                 llSetTimerEvent(10);
                 randParticle = (integer)llFrand(2.0);
@@ -754,9 +859,21 @@ default {
                     Hearts();
                 }
                 particles_on = TRUE;
-            } else if (message == "Bling OFF") {
+            } else if (message == (string)FALSE) {
                 particles = FALSE;
             }
+        } else if (num == RCV_LM_ON_GLOW) {
+            onlineGlow = (float)message;
+            SetSideTextures();
+        } else if (num == RCV_LM_OFF_GLOW) {
+            offlineGlow = (float)message;
+            SetSideTextures();
+        } else if (num == RCV_LM_ON_TINT) {
+            ONLINE_COL = (vector)message;
+            SetSideTextures();
+        } else if (num == RCV_LM_OFF_TINT) {
+            OFFLINE_COL = (vector)message;
+            SetSideTextures();
         }
     }
 

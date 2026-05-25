@@ -33,6 +33,7 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - The online status messages contain a clickable link to the Avatar's profile
 - Online status notifications can be monitored when you are offline if Discord is configured
 - Secure setting and storage of your Discord Webhook URL using the linkset datastore
+  - No notecard configuration needed, all configuration is performed via dialog menus
 - The frequency of Online status updates can be configured [Default: every 2 minutes]
 - The in-world object is a beveled frame displaying the tracked Avatar's profile pic and online status
 - The beveled frame can be customized in several ways
@@ -51,18 +52,19 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 After unpacking the product box, find the Discord IM Online Tracker folder in your inventory. This folder will contain the following:
 
 - "Discord IM Online Tracker (rez me)" object
-- "Target_Config" notecard
 - "Setup Instructions - README" notecard
+- "Quick Setup Guide" notecard
 
 ### Permissions
 
 - Discord IM Online Tracker (rez me) object is Copy/Modify/No Transfer
-- Discord IM Online Tracker script is Copy/No Modify/No Transfer
-- Target_Config notecard is Copy/Modify/Transfer
+- Dialog Menu script is Copy/No Modify/No Transfer
+- Online Tracker script is Copy/No Modify/No Transfer
+- Notecards are Copy/Modify/Transfer
 
 ## LICENSE
 
-The `Discord_IM_Online_Tracker.lsl` script is released under the terms of the GNU General Public License version 3 (GPLv3). This is a strong copyleft free software license. Its primary terms guarantee users the freedom to run, study, share, and modify the software. In return, any publicly distributed modifications or derivative works must also be released under the same GPLv3 terms.
+The `Online_Tracker.lsl` and `Dialog_Menu.lsl` scripts are released under the terms of the GNU General Public License version 3 (GPLv3). This is a strong copyleft free software license. Its primary terms guarantee users the freedom to run, study, share, and modify the software. In return, any publicly distributed modifications or derivative works must also be released under the same GPLv3 terms.
 
 ### Core Permissions
 
@@ -83,9 +85,7 @@ The Truth &amp; Beauty Lab creates open source projects for Second Life and comp
 
 ## RELEASES
 
-To create a Discord IM Online Tracker from release artifacts in this repository, download the `Discord_IM_Online_Tracker.lslo` optimized LSL script and `Target_Config` notecard from the latest release. Upload these to Second Life and copy them into a prim.
-
-Edit the `Target_Config` notecard, replacing "target-avatar-uuid" with the UUID of the Avatar you wish to track.
+To create a Discord IM Online Tracker from release artifacts in this repository, download the `Online_Tracker.lslo` and `Dialog_Menu.lslo` optimized LSL scripts from the latest release. Upload these to Second Life and copy them into a prim.
 
 Note that creating a custom scripted prim from release artifacts may not function as expected. The prim needs to be sculpted in the proper manner and prim faces numbered matching what the script expects. The Second Life Marketplace listing for this product includes a rezzable object already prepared in this manner. The DIY approach using release artifacts may require additional effort but is provided for those who wish to experiment and customize.
 
@@ -95,21 +95,31 @@ More detailed setup instructions can be found in the `Setup_Instructions.txt` re
 
 ### Rez a copy of the "Discord IM Online Tracker (rez me)" object:
 
-Drag and Drop the "Discord IM Online Tracker (rez me)" object from your inventory to an in-world location.
+Drag and Drop the `Discord IM Online Tracker (rez me)` object from your inventory to an in-world location.
 
 The online tracker initially begins to track the owner's online status.
 
 To configure an Avatar to track proceed to setup step 2.
 
-### Edit the "Target_Config" notecard:
+### Configure the Avatar you wish to track
 
-- Right click the "Target_Config" notecard in your inventory and select "Open"
-- Replace "target-avatar-uuid" with the UUID of the Avatar you wish to track
-  - The UUID of an Avatar is displayed in their Profile as the Key just under their Name
-  - Copy and Paste the Key from the Avatar Profile into the Target_Config notecard
-- Save the modified notecard and close the Edit window
+- Click the rezzed Online Tracker object
+- A dialog menu will be presented upon owner touch of the object.
+- Click the `Target AVI` button - a menu of options to manage the target Avatar will open
+- Click the `Input UUID` button - a text box will open
+- Copy and Paste the UUID of the Avatar you wish to track into the text box
+- Click the `Submit` button
 
-### Drag and Drop the "Target_Config" notecard onto the rezzed Discord IM Online Tracker object
+### Configure the Discord Webhook URL
+
+- Click the rezzed Online Tracker object
+- A dialog menu will be presented upon owner touch of the object.
+- Click the `Discord` button - a menu of options to manage Discord integration will open
+- Click the `Webhook` button - a text box will open
+- Copy and Paste your Webhook URL into the text box
+- Click the `Submit` button
+
+### Additional Avatar Tracking
 
 You can repeat this process for as many Avatars as you wish to track, one Avatar per rezzed tracker object.
 
@@ -117,11 +127,11 @@ Each rezzed online tracker object will rename itself with the tracked Avatar dis
 
 ## CONFIGURATION
 
-The rezzed `Discord IM Online Tracker` object can be configured and customized by editing
-the `Target_Config` notecard in the object's inventory Contents. The only required setting
-in this notecard is `TARGET_UUID` and the default settings for all other configuration
-parameters should work well. However, if you wish to customize the object and its behavior
-you can do so in a variety of ways:
+The rezzed `Discord IM Online Tracker` object can be configured and customized using dialog menus.
+The owner can touch the rezzed Online Tracker object to open a dialog menu.
+
+The default settings for all configuration parameters should work well. However, if you wish to
+customize the object and its behavior you can do so in a variety of ways.
 
 - `CUSTOM_PROFILE` sets an alternate picture to use on the main face of the prim
     - Drag and drop a texture to use into the object's Contents and set to the texture name

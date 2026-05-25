@@ -38,37 +38,30 @@ float   CheckInterval = 120.0;
 // Linkset Data Keys
 //
 // Target Avatar UUID linkset data key
-string  AV_UUID_LSD_KEY = "avatar_uuid";
+string  AV_UUID_LSD_KEY  = "avatar_uuid";
 // Online check interval linkset data key
-string  CHK_INT_LSD_KEY = "check_interval";
+string  CHK_INT_LSD_KEY  = "check_interval";
 // Discord Webhook linkset data key
-string  DISCORD_LSD_KEY = "discord_webhook";
+string  DISCORD_LSD_KEY  = "discord_webhook";
 // Owner only linkset data key
-string  OWNER_O_LSD_KEY = "owner_only";
+string  OWNER_O_LSD_KEY  = "owner_only";
+// Bling on/off linkset data key
+string  BLING_LSD_KEY    = "bling_state";
+// Hover Text on/off linkset data key
+string  HOVER_LSD_KEY    = "hover_text";
+// Tint sides on/off linkset data key
+string  TINT_LSD_KEY     = "tint_sides";
+// Online texture linkset data key
+string  ON_TXT_LSD_KEY   = "online_texture";
+// Offline texture linkset data key
+string  OFF_TXT_LSD_KEY  = "offline_texture";
+// Online glow linkset data key
+string  ON_GLOW_LSD_KEY  = "online_glow";
+// Offline glow linkset data key
+string  OFF_GLOW_LSD_KEY = "offline_glow";
+// Texture sides linkset data key
+string  TEXTURE_LSD_KEY  = "texture_sides";
 //
-// Linked Message Numbers
-//
-// Receive from Online Tracker
-integer RCV_LM_TARGET_UUID = 10;
-integer RCV_LM_TARGET_NAME = 11;
-integer RCV_LM_CK_INTERVAL = 12;
-integer RCV_LM_OWNER_ONLY  = 13;
-//
-// Send to Online Tracker
-integer SND_LM_SEND_DC_MSG = 100;
-integer SND_LM_ONLINETOUCH = 101;
-integer SND_LM_SETSIDE_TXT = 110;
-integer SND_LM_ONLINE_TXT  = 111;
-integer SND_LM_OFFLINE_TXT = 112;
-integer SND_LM_OWNER_ONLY  = 113;
-integer SND_LM_WEBHOOK_URL = 200;
-integer SND_LM_TARGET_UUID = 201;
-integer SND_LM_SET_CHK_VAR = 300;
-integer SND_LM_SET_TIMER   = 301;
-integer SND_LM_CLEAR_TIMER = 302;
-integer SND_LM_HOVER_TEXT  = 310;
-integer SND_LM_BLING       = 311;
-
 // Dialog Menu & listener for Webhook URL management
 float   LISTEN_TTL      = 60.0;                
 integer menuListen      = -1;
@@ -118,8 +111,8 @@ integer UseRGB         = FALSE;
 integer TintSides      = FALSE;
 string  OnlineTexture  = "Mosaic-Online";
 string  OfflineTexture = "Mosaic-Offline";
-float   onlineGlow     = 0.2;
-float   offlineGlow    = 0.0;
+string  onlineGlow     = "0.2";
+string  offlineGlow    = "0.0";
 
 integer HoverText      = FALSE;
 integer online_glow;
@@ -193,7 +186,7 @@ displayDialogMenu(string menu) {
             ShowMenu(menuMessage, texture_menu);
         }
     } else if (menu == "frequency") {
-        menuMessage = "\nCurrent online status check interval:\n" +
+        menuMessage = "\nCurrent online status check interval:\n\t" +
                          (string)(((integer)(CheckInterval * 10)) / 10.0) + " seconds";
         menuMessage += "\n\nSelect online status check interval";
         ShowMenu(menuMessage, freq_menu);
@@ -203,11 +196,11 @@ displayDialogMenu(string menu) {
         llDialog(owner, menuMessage, arrange(["On Glow", "Off Glow", "Settings", "Main Menu", "Close"]), dialogChannel);
     } else if (menu == "onGlow") {
         online_glow = TRUE;
-        menuMessage = "\nCurrent online glow status is " + (string)onlineGlow + "\n\nSelect online glow";
+        menuMessage = "\nCurrent online glow status is " + onlineGlow + "\n\nSelect online glow";
         ShowMenu(menuMessage, glow_menu);
     } else if (menu == "offGlow") {
         online_glow = FALSE;
-        menuMessage = "\nCurrent offline glow status is " + (string)offlineGlow + "\n\nSelect offline glow";
+        menuMessage = "\nCurrent offline glow status is " + offlineGlow + "\n\nSelect offline glow";
         ShowMenu(menuMessage, glow_menu);
     } else if (menu == "tint") {
         menuMessage = "\nOn Tint = Select online tint color\nOff Tint = Select offline tint color";
@@ -231,7 +224,8 @@ displayDialogMenu(string menu) {
         ShowMenu(menuMessage, tint_menu);
     } else if (menu == "settings") {
         menuMessage = "\nEnable, disable, and configure appearance and behavior of the Online Tracker";
-        menuMessage += "\n\nCurrent online status check interval is " + (string)CheckInterval;
+        menuMessage += "\n\nCurrent online status check interval:\n\t" +
+                         (string)(((integer)(CheckInterval * 10)) / 10.0) + " seconds";
         string mode = "All Access";
         if (ownerOnly) {
             mode = "Owner Only";
@@ -363,6 +357,23 @@ list arrange(list l) {
     } while (TRUE);
     return [];
 }
+
+// Writes the provided key/value pair to the prim's linkset datastore
+// Sends a link message to the Online Tracker script with the stored value if successful
+integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
+    string val = llStringTrim(value, STRING_TRIM);
+    integer returnCode = llLinksetDataWrite(lsdKey, val);
+    if (returnCode == LINKSETDATA_OK) {
+        llMessageLinked(LINK_THIS, link, val, "");
+        llRegionSayTo(id, 0, "[Online Tracker] " + cfg + " saved.");
+    } else if (returnCode == LINKSETDATA_NOUPDATE) {
+        llMessageLinked(LINK_THIS, link, val, "");
+        llRegionSayTo(id, 0, "[Online Tracker] " + cfg + " already stored and is identical.");
+    } else {
+        llRegionSayTo(id, 0, "[Online Tracker] " + cfg + " save failed (code " + (string)returnCode + ").");
+    }
+    return returnCode;
+}
 //
 // END GENERAL FUNCTIONS
 //
@@ -419,6 +430,29 @@ default {
     }
 
     listen(integer channel, string name, key id, string message) {
+        // Send to Online Tracker
+        integer SND_LM_SEND_DC_MSG = 100;
+        integer SND_LM_ONLINETOUCH = 101;
+        integer SND_LM_SETSIDE_TXT = 110;
+        integer SND_LM_ONLINE_TXT  = 111;
+        integer SND_LM_OFFLINE_TXT = 112;
+        integer SND_LM_OWNER_ONLY  = 113;
+        integer SND_LM_SET_TINT    = 114;
+        integer SND_LM_WEBHOOK_URL = 200;
+        integer SND_LM_TARGET_UUID = 201;
+        integer SND_LM_SET_CHK_VAR = 300;
+        integer SND_LM_SET_TIMER   = 301;
+        integer SND_LM_CLEAR_TIMER = 302;
+        integer SND_LM_HOVER_TEXT  = 310;
+        integer SND_LM_BLING       = 311;
+        integer SND_LM_ON_GLOW     = 312;
+        integer SND_LM_OFF_GLOW    = 313;
+        integer SND_LM_ON_TINT     = 314;
+        integer SND_LM_OFF_TINT    = 315;
+
+        // Return code from writes to linkset datastore
+        integer rc;
+
         // Ignore everybody but the owner
         if (id != owner) return;
 
@@ -457,20 +491,10 @@ default {
                 return; // Exit the listen event
             }
         } else if (channel == discordChannel) {
-            string url = llStringTrim(message, STRING_TRIM);
-            integer rc = llLinksetDataWrite(DISCORD_LSD_KEY, url);
-            if (rc == LINKSETDATA_OK) {
-                llMessageLinked(LINK_THIS, SND_LM_WEBHOOK_URL, url, "");
-                llRegionSayTo(id, 0, "[Online Tracker] Webhook saved.");
-                Discord_URL = url;
+            rc = linksetDataWrite(id, DISCORD_LSD_KEY, message, SND_LM_WEBHOOK_URL, "Webhook");
+            if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                Discord_URL = llStringTrim(message, STRING_TRIM);
                 DiscordRelay = TRUE;
-            } else if (rc == LINKSETDATA_NOUPDATE) {
-                llMessageLinked(LINK_THIS, SND_LM_WEBHOOK_URL, url, "");
-                llRegionSayTo(id, 0, "[Online Tracker] Webhook already stored and is identical.");
-                Discord_URL = url;
-                DiscordRelay = TRUE;
-            } else {
-                llRegionSayTo(id, 0, "[Online Tracker] Webhook save failed (code " + (string)rc + ").");
             }
 
             if (inputListen != -1) {
@@ -480,16 +504,9 @@ default {
         } else if (channel == targetChannel) {
             string uuid = llStringTrim(message, STRING_TRIM);
             if ((key)uuid) {
-                integer rc = llLinksetDataWrite(AV_UUID_LSD_KEY, uuid);
-                if (rc == LINKSETDATA_OK) {
-                    llMessageLinked(LINK_THIS, SND_LM_TARGET_UUID, uuid, "");
-                    llRegionSayTo(id, 0, "[Online Tracker] Target UUID saved.");
+                rc = linksetDataWrite(id, AV_UUID_LSD_KEY, uuid, SND_LM_TARGET_UUID, "Target UUID");
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
                     TargetUuid = (key)uuid;
-                } else if (rc == LINKSETDATA_NOUPDATE) {
-                    llMessageLinked(LINK_THIS, SND_LM_TARGET_UUID, uuid, "");
-                    llRegionSayTo(id, 0, "[Online Tracker] Target UUID already stored and is identical.");
-                } else {
-                    llRegionSayTo(id, 0, "[Online Tracker] Target UUID save failed (code " + (string)rc + ").");
                 }
             } else {
                 llRegionSayTo(id, 0, "[Online Tracker] " + uuid + " is not a valid UUID.");
@@ -511,13 +528,17 @@ default {
                 displayDialogMenu(pageMenuName);
                 return;
             } else if (message == "Bling ON") {
-                llMessageLinked(LINK_THIS, SND_LM_BLING, message, "");
-                particles = TRUE;
+                rc = linksetDataWrite(id, BLING_LSD_KEY, (string)TRUE, SND_LM_BLING, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    particles = TRUE;
+                }
                 displayDialogMenu("settings");
                 return;
             } else if (message == "Bling OFF") {
-                llMessageLinked(LINK_THIS, SND_LM_BLING, message, "");
-                particles = FALSE;
+                rc = linksetDataWrite(id, BLING_LSD_KEY, (string)FALSE, SND_LM_BLING, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    particles = FALSE;
+                }
                 displayDialogMenu("settings");
                 return;
             } else if (message == "Discord") {
@@ -527,13 +548,17 @@ default {
                 displayDialogMenu("frequency");
                 return;
             } else if (message == "Hover OFF") {
-                llMessageLinked(LINK_THIS, SND_LM_HOVER_TEXT, message, "");
-                HoverText = FALSE;
+                rc = linksetDataWrite(id, HOVER_LSD_KEY, (string)FALSE, SND_LM_HOVER_TEXT, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    HoverText = FALSE;
+                }
                 displayDialogMenu("settings");
                 return;
             } else if (message == "Hover ON") {
-                llMessageLinked(LINK_THIS, SND_LM_HOVER_TEXT, message, "");
-                HoverText = TRUE;
+                rc = linksetDataWrite(id, HOVER_LSD_KEY, (string)TRUE, SND_LM_HOVER_TEXT, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    HoverText = TRUE;
+                }
                 displayDialogMenu("settings");
                 return;
             } else if (message == "Main Menu") {
@@ -559,24 +584,32 @@ default {
                 llMessageLinked(LINK_THIS, SND_LM_CLEAR_TIMER, message, "");
                 isTracking = FALSE;
             } else if (message == "Tint ON") {
-                llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
-                TintSides = TRUE;
+                rc = linksetDataWrite(id, TINT_LSD_KEY, (string)TRUE, SND_LM_SET_TINT, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    TintSides = TRUE;
+                }
                 displayDialogMenu("settings");
                 return;
             } else if (message == "Tint OFF") {
-                llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
-                TintSides = FALSE;
-                llSetColor(WHITE, ALL_SIDES);
+                rc = linksetDataWrite(id, TINT_LSD_KEY, (string)FALSE, SND_LM_SET_TINT, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    TintSides = FALSE;
+                    llSetColor(WHITE, ALL_SIDES);
+                }
                 displayDialogMenu("settings");
                 return;
             } else if (message == "Texture ON") {
-                UseRGB = FALSE;
-                llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
+                rc = linksetDataWrite(id, TEXTURE_LSD_KEY, (string)TRUE, SND_LM_SETSIDE_TXT, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    UseRGB = FALSE;
+                }
                 displayDialogMenu("settings");
                 return;
             } else if ((message == "Color ON") || (message == "Use Colors")) {
-                UseRGB = TRUE;
-                llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
+                rc = linksetDataWrite(id, TEXTURE_LSD_KEY, (string)FALSE, SND_LM_SETSIDE_TXT, message);
+                if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                    UseRGB = TRUE;
+                }
                 displayDialogMenu("settings");
                 return;
             } else if (message == "Glow") {
@@ -608,29 +641,24 @@ default {
                 return;
             } else if (llGetSubString(message, -7, -1) == "-Online") {
                 if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
-                    OnlineTexture = message;
-                    llMessageLinked(LINK_THIS, SND_LM_ONLINE_TXT, message, "");
+                    rc = linksetDataWrite(id, ON_TXT_LSD_KEY, message, SND_LM_ONLINE_TXT, "Online texture");
+                    if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                        OnlineTexture = message;
+                    }
                     displayDialogMenu("frame");
                     return;
                 }
             } else if (llGetSubString(message, -8, -1) == "-Offline") {
                 if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
-                    OfflineTexture = message;
-                    llMessageLinked(LINK_THIS, SND_LM_OFFLINE_TXT, message, "");
+                    rc = linksetDataWrite(id, OFF_TXT_LSD_KEY, message, SND_LM_OFFLINE_TXT, "Offline texture");
+                    if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                        OfflineTexture = message;
+                    }
                     displayDialogMenu("frame");
                     return;
                 }
             } else if (llListFindList(freq_menu, [message]) != -1) {
-                integer ci = llLinksetDataWrite(CHK_INT_LSD_KEY, message);
-                if (ci == LINKSETDATA_OK) {
-                    llMessageLinked(LINK_THIS, SND_LM_SET_CHK_VAR, message, "");
-                    llRegionSayTo(id, 0, "[Online Tracker] Check interval saved.");
-                } else if (ci == LINKSETDATA_NOUPDATE) {
-                    llMessageLinked(LINK_THIS, SND_LM_SET_CHK_VAR, message, "");
-                    llRegionSayTo(id, 0, "[Online Tracker] Check interval already stored and is identical.");
-                } else {
-                    llRegionSayTo(id, 0, "[Online Tracker] Check interval save failed (code " + (string)ci + ").");
-                }
+                linksetDataWrite(id, CHK_INT_LSD_KEY, message, SND_LM_SET_CHK_VAR, "Check interval");
                 displayDialogMenu("settings");
                 return;
             } else if ((message == "Owner Only") || (message == "All Access")) {
@@ -639,33 +667,25 @@ default {
                 } else {
                     ownerOnly = FALSE;
                 }
-                llMessageLinked(LINK_THIS, SND_LM_OWNER_ONLY, (string)ownerOnly, "");
-                integer oo = llLinksetDataWrite(OWNER_O_LSD_KEY, (string)ownerOnly);
-                if (oo == LINKSETDATA_OK) {
-                    llRegionSayTo(id, 0, "[Online Tracker] Access mode saved.");
-                } else if (oo == LINKSETDATA_NOUPDATE) {
-                    llRegionSayTo(id, 0, "[Online Tracker] Access mode already stored and is identical.");
-                } else {
-                    llRegionSayTo(id, 0, "[Online Tracker] Access mode save failed (code " + (string)oo + ").");
-                }
+                linksetDataWrite(id, OWNER_O_LSD_KEY, (string)ownerOnly, SND_LM_OWNER_ONLY, "Access mode");
                 displayDialogMenu("settings");
                 return;
             } else if (llListFindList(glow_menu, [message]) != -1) {
-                float glow_status;
+                string glow_status;
                 if (message == "Glow OFF") {
-                    glow_status = 0.0;
+                    glow_status = "0.0";
                 } else {
-                    glow_status = (float)message;
+                    glow_status = message;
                 }
                 if (online_glow) {
-                    if (onlineGlow != glow_status) {
+                    rc = linksetDataWrite(id, ON_GLOW_LSD_KEY, glow_status, SND_LM_ON_GLOW, "Online glow");
+                    if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
                         onlineGlow = glow_status;
-                        llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
                     }
                 } else {
-                    if (offlineGlow != glow_status) {
+                    rc = linksetDataWrite(id, OFF_GLOW_LSD_KEY, glow_status, SND_LM_OFF_GLOW, "Offline glow");
+                    if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
                         offlineGlow = glow_status;
-                        llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
                     }
                 }
                 displayDialogMenu("glow");
@@ -674,15 +694,11 @@ default {
                 integer index = llListFindList(color_menu, [message]);
                 vector cv = llList2Vector(color_vectors, index);
                 if (online_tint) {
-                    if (ONLINE_COL != cv) {
-                        ONLINE_COL = cv;
-                        llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
-                    }
+                    ONLINE_COL = cv;
+                    llMessageLinked(LINK_THIS, SND_LM_ON_TINT, (string)cv, "");
                 } else {
-                    if (OFFLINE_COL != cv) {
-                        OFFLINE_COL = cv;
-                        llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, message, "");
-                    }
+                    OFFLINE_COL = cv;
+                    llMessageLinked(LINK_THIS, SND_LM_OFF_TINT, (string)cv, "");
                 }
                 displayDialogMenu("tint");
                 return;
@@ -721,6 +737,20 @@ default {
 
     link_message(integer sender, integer num, string message, key id)
     {
+        // Receive from Online Tracker
+        integer RCV_LM_TARGET_UUID = 10;
+        integer RCV_LM_TARGET_NAME = 11;
+        integer RCV_LM_CK_INTERVAL = 12;
+        integer RCV_LM_OWNER_ONLY  = 13;
+        integer RCV_LM_BLING       = 14;
+        integer RCV_LM_HOVER_TEXT  = 15;
+        integer RCV_LM_TINT_SIDES  = 16;
+        integer RCV_LM_ONLINE_TXT  = 17;
+        integer RCV_LM_OFFLINE_TXT = 18;
+        integer RCV_LM_ON_GLOW     = 19;
+        integer RCV_LM_OFF_GLOW    = 20;
+        integer RCV_LM_SETSIDE_TXT = 21;
+
         if (num == RCV_LM_TARGET_UUID) {
             TargetUuid = id;
         } else if (num == RCV_LM_TARGET_NAME) {
@@ -729,6 +759,22 @@ default {
             CheckInterval = (float)message;
         } else if (num == RCV_LM_OWNER_ONLY) {
             ownerOnly = (integer)message;
+        } else if (num == RCV_LM_BLING) {
+            particles = (integer)message;
+        } else if (num == RCV_LM_HOVER_TEXT) {
+            HoverText = (integer)message;
+        } else if (num == RCV_LM_TINT_SIDES) {
+            TintSides = (integer)message;
+        } else if (num == RCV_LM_ONLINE_TXT) {
+            OnlineTexture = message;
+        } else if (num == RCV_LM_OFFLINE_TXT) {
+            OfflineTexture = message;
+        } else if (num == RCV_LM_ON_GLOW) {
+            onlineGlow = message;
+        } else if (num == RCV_LM_OFF_GLOW) {
+            offlineGlow = message;
+        } else if (num == RCV_LM_SETSIDE_TXT) {
+            UseRGB = (integer)message;
         }
     }
 

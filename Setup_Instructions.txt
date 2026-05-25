@@ -21,6 +21,7 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - The online status of the configured Avatar is indicated by the object's border color, red or green
 - The online status messages contain a clickable link to the Avatar's profile
 - Secure setting and storage of your Discord Webhook URL using the linkset datastore
+  - No notecard configuration needed, all configuration is performed via dialog menus
 - Online status notifications can be monitored when you are offline if Discord is configured
 - The frequency of Online status updates can be configured [Default: every 2 minutes]
 - The in-world object is a beveled frame displaying the tracked Avatar's profile pic and online status
@@ -42,13 +43,14 @@ After unpacking the product box, find the Discord IM Online Tracker folder in yo
 This folder will contain the following:
 
 - "Discord IM Online Tracker (rez me)" object
-- "Target_Config" notecard
 - "Setup Instructions - README" notecard
+- "Quick Setup Guide" notecard
 
 Permissions:
     Discord IM Online Tracker (rez me) object is Copy/Modify/No Transfer
-    Discord IM Online Tracker script is Copy/No Modify/No Transfer
-    Target_Config notecard is Copy/Modify/Transfer
+    Dialog Menu script is Copy/No Modify/No Transfer
+    Online Tracker script is Copy/No Modify/No Transfer
+    Notecards are Copy/Modify/Transfer
 
 SETUP STEPS
 ────────────
@@ -60,15 +62,33 @@ SETUP STEPS
    The online tracker initially begins to track the owner's online status.
    To configure an Avatar to track proceed to setup step 2.
 
-2. Edit the "Target_Config" notecard:
+2. Configure the Avatar you wish to track
 
-   Right click the "Target_Config" notecard in your inventory and select "Open"
-   Replace "target-avatar-uuid" with the UUID of the Avatar you wish to track
-     The UUID of an Avatar is displayed in their Profile as the Key just under their Name
-     Copy and Paste the Key from the Avatar Profile into the Target_Config notecard
-   Save the modified notecard and close the Edit window
+   Click the rezzed Online Tracker object
 
-3. Drag and Drop the "Target_Config" notecard onto the rezzed Discord IM Online Tracker object
+   A dialog menu will be presented upon owner touch of the object.
+
+   Click the "Target AVI" button - a menu of options to manage the target Avatar will open
+
+   Click the "Input UUID" button - a text box will open
+
+   Copy and Paste the UUID of the Avatar you wish to track into the text box
+
+   Click the "Submit" button
+
+3. Configure the Discord Webhook URL
+
+   Click the rezzed Online Tracker object
+
+   A dialog menu will be presented upon owner touch of the object.
+
+   Click the "Discord" button - a menu of options to manage Discord integration will open
+
+   Click the "Webhook" button - a text box will open
+
+   Copy and Paste your Webhook URL into the text box
+
+   Click the "Submit" button
 
 You can repeat this process for as many Avatars as you wish to track, one Avatar per rezzed tracker object.
 
@@ -77,7 +97,9 @@ Each rezzed online tracker object will rename itself with the tracked Avatar dis
 CONFIGURATION
 ──────────────
 
-The rezzed 'Discord IM Online Tracker' object can be configured and customized by editing the 'Target_Config' notecard in the object's inventory Contents. The only required setting in this notecard is 'TARGET_UUID' and the default settings for all other configuration parameters should work well. However, if you wish to customize the object and its behavior you can do so in a variety of ways:
+The rezzed 'Discord IM Online Tracker' object can be configured and customized using dialog menus. The owner can touch the rezzed Online Tracker object to open a dialog menu.
+
+The default settings for all configuration parameters should work well. However, if you wish to customize the object and its behavior you can do so in a variety of ways:
 
 - 'CUSTOM_PROFILE' sets an alternate picture to use on the main face of the prim
     - Drag and drop a texture to use into the object's Contents and set to the texture name
