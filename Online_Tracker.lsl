@@ -203,19 +203,6 @@ SetDefaultTextures() { // Set the sides to their default textures
     }
 }
 
-integer IsVector(string s) {
-    // Split the string into components using common delimiters
-    list split = llParseString2List(s, [" "], ["<", ">", ","]);
-
-    // Valid vectors must have at least 7 parts: <, x, ,, y, ,, z, >
-    if(llGetListLength(split) != 7) return FALSE;
-
-    // Flip the sign of the Z component. If the string is valid, the
-    // resulting vector will NOT match the original. If it's invalid,
-    // both will fail to ZERO_VECTOR and thus match.
-    return !((string)((vector)s) == (string)((vector)((string)llListInsertList(split, ["-"], 5))));
-}
-
 GetDatastoreValues() {
     string linksetValue = llLinksetDataRead(AV_UUID_LSD_KEY);
     if ((key)linksetValue) {
@@ -558,24 +545,6 @@ sendToDiscord(string dm, string et, integer ols, string time) {
     //    llList2Json(JSON_OBJECT, json) );
     //
     // But straight up JSON is faster although less readable
-}
-
-list get_Textures(string prefix) {
-    list texture_list = [];
-    integer count = llGetInventoryNumber(INVENTORY_TEXTURE);
-
-    // Populate list (Dialogs only show up to 12 buttons at once)
-    integer i;
-    integer position;
-    string texture_name;
-    for (i = 0; i < count; ++i) {
-        texture_name = llGetInventoryName(INVENTORY_TEXTURE, i);
-        position = llSubStringIndex(texture_name, prefix);
-        if (position != -1) {
-            texture_list += [texture_name];
-        }
-    }
-    return texture_list;
 }
 
 integer IsValidURL(string url) {

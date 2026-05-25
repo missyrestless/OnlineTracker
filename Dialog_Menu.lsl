@@ -159,6 +159,19 @@ list get_Textures(string prefix) {
     return texture_list;
 }
 
+list arrange(list l) {
+    list outl = [];
+    integer n = llGetListLength(l);
+    do {
+        if (n < 3) return outl + l;
+        n = n - 3;
+        outl = outl + llList2List(l, -3, -1);
+        if (n == 0) return outl;
+        l = llList2List(l, 0, -4);
+    } while (TRUE);
+    return [];
+}
+
 displayDialogMenu(string menu) {
     listenHandle = llListen(dialogChannel, "", owner, "");
     list texture_menu = [];
@@ -321,43 +334,6 @@ ShowMenu(string msg, list fm) {
     }
 }
 
-integer IsValidURL(string url) {
-    // Convert to lowercase for easier comparison
-    string lower_url = llToLower(url);
-
-    // Check if it starts with http:// or https://
-    if (llSubStringIndex(lower_url, "http://") != 0 &&
-        llSubStringIndex(lower_url, "https://") != 0) {
-        return FALSE;
-    }
-
-    // Check for spaces, which are invalid in URLs
-    if (llSubStringIndex(url, " ") != -1) {
-        return FALSE;
-    }
-
-    // Basic length check (URLs must have at least a protocol and a domain)
-    if (llStringLength(url) < 11) { // shortest possible: http://a.bc
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
-list arrange(list l) {
-    list outl = [];
-    integer n = llGetListLength(l);
-    do {
-        if (n < 3) return outl + l;
-        n = n - 3;
-        outl = outl + llList2List(l, -3, -1);
-        if (n == 0) return outl;
-        l = llList2List(l, 0, -4);
-    } while (TRUE);
-    return [];
-}
-
 // Writes the provided key/value pair to the prim's linkset datastore
 // Sends a link message to the Online Tracker script with the stored value if successful
 integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
@@ -410,10 +386,11 @@ showTargetMenu() {
         arrange(["Input UUID", "UUID Test", "UUID Clear", "UUID Check", "Close"]),
         dmenuChannel);
 }
-//
+
 // END DISCORD WEBHOOK MANAGEMENT FUNCTIONS
 //
 // STATES & EVENT HANDLERS
+
 default {
     on_rez(integer param) {
         llResetScript();
