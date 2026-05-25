@@ -14,15 +14,21 @@ SETUP STEPS
    The online tracker initially begins to track the owner's online status.
    To configure an Avatar to track proceed to setup step 2.
 
-2. Edit the "Target_Config" notecard:
+2. Configure the Avatar you wish to track
 
-   Right click the "Target_Config" notecard in your inventory and select "Open"
-   Replace "target-avatar-uuid" with the UUID of the Avatar you wish to track
-     The UUID of an Avatar is displayed in their Profile as the Key just under their Name
-     Copy and Paste the Key from the Avatar Profile into the Target_Config notecard
-   Save the modified notecard and close the Edit window
+   Click the rezzed Online Tracker object
 
-3. Drag and Drop the "Target_Config" notecard onto the rezzed Discord IM Online Tracker object
+   A dialog menu will be presented upon owner touch of the object.
+
+   Click the "Target AVI" button - a menu of options to manage the target Avatar will open
+
+   Click the "Input UUID" button - a text box will open
+
+   Copy and Paste the UUID of the Avatar you wish to track into the text box
+
+   Click the "Submit" button
+
+3. See below to configure your Discord Webhook URL
 
 You can repeat this process for as many Avatars as you wish to track, one Avatar per rezzed tracker object.
 

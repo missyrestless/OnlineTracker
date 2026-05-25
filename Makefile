@@ -23,7 +23,7 @@ VERSION="1.1.0"
 
 # Note some of these scripts don't strictly need to be optimized for memory.
 
-OPTIMIZED=Discord_IM_Online_Tracker.lslo
+OPTIMIZED=Online_Tracker.lslo Dialog_Menu.lslo
 
 UNOPTIMIZED=
 
