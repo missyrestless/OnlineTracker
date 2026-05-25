@@ -61,6 +61,8 @@ string  ON_GLOW_LSD_KEY  = "online_glow";
 string  OFF_GLOW_LSD_KEY = "offline_glow";
 // Texture sides linkset data key
 string  TEXTURE_LSD_KEY  = "texture_sides";
+// Custom profile pic linkset data key
+string  PRO_TXT_LSD_KEY  = "custom_profile";
 //
 // Dialog Menu & listener for Webhook URL management
 float   LISTEN_TTL      = 60.0;                
@@ -107,6 +109,7 @@ list freq_menu = ["Main Menu", "Settings", "60", "90", "120", "150", "180", "240
 
 // Frame style and textures
 string  profilePic     = "";
+string  ProfileTexture = "";
 integer UseRGB         = FALSE;
 integer TintSides      = FALSE;
 string  OnlineTexture  = "Mosaic-Online";
@@ -139,6 +142,23 @@ key TargetUuid  = NULL_KEY;
 stopListener() {
     llListenRemove(listenHandle);
     inDialogMenu = FALSE;
+}
+
+integer num_Textures(string prefix) {
+    integer num_textures = 0;
+    integer count = llGetInventoryNumber(INVENTORY_TEXTURE);
+
+    integer i;
+    integer position;
+    string texture_name;
+    for (i = 0; i < count; ++i) {
+        texture_name = llGetInventoryName(INVENTORY_TEXTURE, i);
+        position = llSubStringIndex(texture_name, prefix);
+        if (position != -1) {
+            num_textures += 1;
+        }
+    }
+    return num_textures;
 }
 
 list get_Textures(string prefix) {
@@ -198,9 +218,19 @@ displayDialogMenu(string menu) {
             menuMessage = "\nCurrent offline texture is " + OfflineTexture + "\n\nSelect an offline texture";
             ShowMenu(menuMessage, texture_menu);
         }
+    } else if (menu == "customPic") {
+        texture_menu = get_Textures("Profile");
+        if (texture_menu) {
+            texture_menu += ["Default", "Main Menu", "Close"];
+            if (ProfileTexture == "") {
+                menuMessage = "\nCurrent profile pic texture is Avatar profile pic\n\nSelect a custom profile pic texture";
+            } else {
+                menuMessage = "\nCurrent profile pic texture is " + ProfileTexture + "\n\nSelect a custom profile pic texture";
+            }
+            ShowMenu(menuMessage, texture_menu);
+        }
     } else if (menu == "frequency") {
-        menuMessage = "\nCurrent online status check interval:\n\t" +
-                         (string)(((integer)(CheckInterval * 10)) / 10.0) + " seconds";
+        menuMessage = "\nCurrent online status check interval:\n\t" + FormatFloat(CheckInterval) + " seconds";
         menuMessage += "\n\nSelect online status check interval";
         ShowMenu(menuMessage, freq_menu);
     } else if (menu == "glow") {
@@ -237,8 +267,7 @@ displayDialogMenu(string menu) {
         ShowMenu(menuMessage, tint_menu);
     } else if (menu == "settings") {
         menuMessage = "\nEnable, disable, and configure appearance and behavior of the Online Tracker";
-        menuMessage += "\n\nCurrent online status check interval:\n\t" +
-                         (string)(((integer)(CheckInterval * 10)) / 10.0) + " seconds";
+        menuMessage += "\n\nCurrent online status check interval:\n\t" + FormatFloat(CheckInterval) + " seconds";
         string mode = "All Access";
         if (ownerOnly) {
             mode = "Owner Only";
@@ -251,6 +280,9 @@ displayDialogMenu(string menu) {
         }
         menuMessage += "\n\nSelect an option";
         list sett_menu = ["Main Menu", "Glow", "Interval", mode];
+        if (num_Textures("Profile") > 0) {
+            sett_menu += ["Custom Pic"];
+        }
         if (HoverText) {
             sett_menu += ["Hover OFF"];
         } else {
@@ -332,6 +364,22 @@ ShowMenu(string msg, list fm) {
         // Send the dialog
         llDialog(owner, msg, arrange(fm), dialogChannel);
     }
+}
+
+// Truncates floating point representation to a single decimal digit
+string FormatFloat(float num) {
+    string ret;
+    integer scale;
+
+    scale = (integer)(num * 10);
+    ret = (string)scale;
+    integer length = llStringLength(ret);
+
+    // Safety check for strings that are too short
+    if (length < 2) return ret;
+
+    // Split the string: everything up to the last char + "." + the last char
+    return llGetSubString(ret, 0, length - 2) + "." + llGetSubString(ret, -1, -1);
 }
 
 // Writes the provided key/value pair to the prim's linkset datastore
@@ -426,6 +474,7 @@ default {
         integer SND_LM_OFF_GLOW    = 313;
         integer SND_LM_ON_TINT     = 314;
         integer SND_LM_OFF_TINT    = 315;
+        integer SND_LM_PROFILE_TXT = 400;
 
         // Return code from writes to linkset datastore
         integer rc;
@@ -484,6 +533,9 @@ default {
                 rc = linksetDataWrite(id, AV_UUID_LSD_KEY, uuid, SND_LM_TARGET_UUID, "Target UUID");
                 if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
                     TargetUuid = (key)uuid;
+                    // Reset pic to default
+                    linksetDataWrite(id, PRO_TXT_LSD_KEY, "", SND_LM_PROFILE_TXT, "Profile texture");
+                    ProfileTexture = "";
                 }
             } else {
                 llRegionSayTo(id, 0, "[Online Tracker] " + uuid + " is not a valid UUID.");
@@ -616,6 +668,9 @@ default {
             } else if (message == "Off Frame") {
                 displayDialogMenu("offFrame");
                 return;
+            } else if (message == "Custom Pic") {
+                displayDialogMenu("customPic");
+                return;
             } else if (llGetSubString(message, -7, -1) == "-Online") {
                 if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
                     rc = linksetDataWrite(id, ON_TXT_LSD_KEY, message, SND_LM_ONLINE_TXT, "Online texture");
@@ -634,6 +689,20 @@ default {
                     displayDialogMenu("frame");
                     return;
                 }
+            } else if (llGetSubString(message, -8, -1) == "-Profile") {
+                if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
+                    rc = linksetDataWrite(id, PRO_TXT_LSD_KEY, message, SND_LM_PROFILE_TXT, "Profile texture");
+                    if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
+                        ProfileTexture = message;
+                    }
+                    displayDialogMenu("customPic");
+                    return;
+                }
+            } else if (message == "Default") {
+                rc = linksetDataWrite(id, PRO_TXT_LSD_KEY, "", SND_LM_PROFILE_TXT, "Profile texture");
+                ProfileTexture = "";
+                displayDialogMenu("customPic");
+                return;
             } else if (llListFindList(freq_menu, [message]) != -1) {
                 linksetDataWrite(id, CHK_INT_LSD_KEY, message, SND_LM_SET_CHK_VAR, "Check interval");
                 displayDialogMenu("settings");
@@ -727,6 +796,7 @@ default {
         integer RCV_LM_ON_GLOW     = 19;
         integer RCV_LM_OFF_GLOW    = 20;
         integer RCV_LM_SETSIDE_TXT = 21;
+        integer RCV_LM_PROFILE_TXT = 22;
 
         if (num == RCV_LM_TARGET_UUID) {
             TargetUuid = id;
@@ -746,6 +816,8 @@ default {
             OnlineTexture = message;
         } else if (num == RCV_LM_OFFLINE_TXT) {
             OfflineTexture = message;
+        } else if (num == RCV_LM_PROFILE_TXT) {
+            ProfileTexture = message;
         } else if (num == RCV_LM_ON_GLOW) {
             onlineGlow = message;
         } else if (num == RCV_LM_OFF_GLOW) {

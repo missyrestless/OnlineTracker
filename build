@@ -18,5 +18,5 @@ make
 
   cp Dialog_Menu.lslo ${DEST}/Dialog_Menu.lsl
   cp Online_Tracker.lslo ${DEST}/Online_Tracker.lsl
-  cp *.txt *.pdf ${DEST}
+  cp LICENSE *.txt *.pdf ${DEST}
 }
