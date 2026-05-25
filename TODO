@@ -11,6 +11,10 @@
 * DONE Check if button labels are 24 or fewer characters and if not then truncate
   * DONE Or just shorten long texture names
 * DONE Add LICENSE to distribution
+* DONE Use linkset datastore instead of notecard for configuration values
+* DONE Reset profile pic when target UUID is entered
+
+- Add support for custom display image via dialog menu
 
 - Longer term wish list
   - Add support for tracking multiple avatars in a linked prim set

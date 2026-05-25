@@ -247,72 +247,52 @@ GetDatastoreValues() {
         CheckInterval = (float)linksetValue;
     } else if ((string)((float)linksetValue) == linksetValue) {
         CheckInterval = (float)linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default online status check interval of 120 seconds");
     }
     llMessageLinked(LINK_THIS, SND_LM_CK_INTERVAL, (string)CheckInterval, "");
     linksetValue = llLinksetDataRead(OWNER_O_LSD_KEY);
     if ((linksetValue == "0") || (linksetValue == "1")) {
         ownerOnly = (integer)linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting of Owner Only");
     }
     llMessageLinked(LINK_THIS, SND_LM_OWNER_ONLY, (string)ownerOnly, "");
     linksetValue = llLinksetDataRead(BLING_LSD_KEY);
     if ((linksetValue == "0") || (linksetValue == "1")) {
         particles = (integer)linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Bling");
     }
     llMessageLinked(LINK_THIS, SND_LM_BLING, (string)particles, "");
     linksetValue = llLinksetDataRead(HOVER_LSD_KEY);
     if ((linksetValue == "0") || (linksetValue == "1")) {
         HoverText = (integer)linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Hover Text");
     }
     llMessageLinked(LINK_THIS, SND_LM_HOVER_TEXT, (string)HoverText, "");
     linksetValue = llLinksetDataRead(TINT_LSD_KEY);
     if ((linksetValue == "0") || (linksetValue == "1")) {
         TintSides = (integer)linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Tint sides");
     }
     llMessageLinked(LINK_THIS, SND_LM_TINT_SIDES, (string)TintSides, "");
     linksetValue = llLinksetDataRead(ON_TXT_LSD_KEY);
     if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
         OnlineTexture = linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Online texture");
     }
     llMessageLinked(LINK_THIS, SND_LM_ONLINE_TXT, OnlineTexture, "");
     linksetValue = llLinksetDataRead(OFF_TXT_LSD_KEY);
     if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
         OfflineTexture = linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Offline texture");
     }
     llMessageLinked(LINK_THIS, SND_LM_OFFLINE_TXT, OfflineTexture, "");
     linksetValue = llLinksetDataRead(ON_GLOW_LSD_KEY);
     if (linksetValue != "") {
         onlineGlow = (float)linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Online glow");
     }
     llMessageLinked(LINK_THIS, SND_LM_ON_GLOW, (string)onlineGlow, "");
     linksetValue = llLinksetDataRead(OFF_GLOW_LSD_KEY);
     if (linksetValue != "") {
         offlineGlow = (float)linksetValue;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Offline glow");
     }
     llMessageLinked(LINK_THIS, SND_LM_OFF_GLOW, (string)offlineGlow, "");
     linksetValue = llLinksetDataRead(TEXTURE_LSD_KEY);
     if ((linksetValue == "0") || (linksetValue == "1")) {
         UseRGB = (integer)linksetValue;
         UseRGB = !UseRGB;
-    } else {
-        llOwnerSay("[Online Tracker] Using default setting for Use textures");
     }
     llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, (string)UseRGB, "");
 }
@@ -829,6 +809,7 @@ default {
             DiscordRelay = TRUE;
         } else if (num == RCV_LM_TARGET_UUID) {
             TargetUuid = (key)message;
+            init_target();
         } else if (num == RCV_LM_SET_CHK_VAR) {
             CheckInterval = (float)message;
             llSetTimerEvent(CheckInterval);
