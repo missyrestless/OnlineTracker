@@ -45,6 +45,7 @@ make
 
 PRODUCT="Discord_IM_Online_Tracker"
 tar cf - *.lslo *.lsl \
+         Quick_Setup_Guide.txt \
          Setup_Instructions.txt \
          Setup_Instructions.pdf \
          LICENSE \
@@ -57,6 +58,7 @@ gh release create v${VERSION} ${DRAFT} \
                   --notes-file README.md \
                   Dialog_Menu.lslo \
                   Online_Tracker.lslo \
+                  Quick_Setup_Guide.txt \
                   Setup_Instructions.pdf \
                   Setup_Instructions.txt \
                   ${PRODUCT}-${VERSION}.tar.gz
