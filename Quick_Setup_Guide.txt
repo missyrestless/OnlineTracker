@@ -37,7 +37,7 @@ Each rezzed online tracker object will rename itself with the tracked Avatar dis
 DISCORD SETUP
 ──────────────
 
-In order to be able to communicate from SL to Discord, you need to create a Discord "Webhook". To do this this, you need your own Discord server or a server you co-administer. For testing purposes, we highly recommend to make a new server (it's free!), or at least create a new channel on your existing server.
+In order to be able to communicate from SL to Discord, you need to create a Discord "Webhook". To do this, you need your own Discord server or a server you co-administer. For testing purposes, we highly recommend to make a new server (it's free!), or at least create a new channel on your existing server.
 
 The Webhook is best created in the Discord web application;  NOT on the mobile app! Please refer to the video - https://www.youtube.com/watch?v=AKOIPxqHYI8 - to see how/where to get the Webhook. Be aware that the way the interface looks might have changed since then.
 
