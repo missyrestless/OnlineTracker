@@ -30,7 +30,7 @@
 //
 // VARIABLES
 //
-string version = "1.1.0";
+string version = "1.1.1";
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
 // Name of the avatar to track
