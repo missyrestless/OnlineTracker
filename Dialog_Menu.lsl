@@ -67,6 +67,8 @@ string  OFF_TINT_LSD_KEY = "offline_tint";
 string  TEXTURE_LSD_KEY  = "texture_sides";
 // Custom profile texture linkset data key
 string  PRO_TXT_LSD_KEY  = "custom_profile";
+// IM Owner linkset data key
+string  IM_OWNER_LSD_KEY  = "im_owner";
 //
 // Dialog Menu & listener for Webhook URL management
 float   LISTEN_TTL      = 60.0;                
@@ -282,9 +284,13 @@ displayDialogMenu(string menu) {
         } else {
             mode = "Owner Only";
         }
+        string im = "IM Owner";
+        if (IMowner) {
+            im = "Disable IM";
+        }
         menuMessage += "\n\nShow Conf = Display current configuration values";
         menuMessage += "\n\nSelect an option";
-        list sett_menu = ["Main Menu", "Show Conf", "Glow", "Interval", mode];
+        list sett_menu = ["Main Menu", "Show Conf", "Glow", "Interval", im, mode];
         if (num_Textures("Profile") > 0) {
             sett_menu += ["Custom Pic"];
         }
@@ -325,9 +331,8 @@ displayDialogMenu(string menu) {
         string discord_status;
         if (DiscordRelay) {
             discord_status = "Enabled";
-            discord_status = "Enabled. Click the Discord button to change your Webhook URL\n";
         } else {
-            discord_status = "Disabled. Click the Discord button to enter your Webhook URL\n";
+            discord_status = "Disabled. Click the Discord button to enter your Webhook URL";
         }
         menuMessage = "\nTracking " + TargetDisplayName + ". Click the Target AVI button to configure tracked Avatar";
         menuMessage = menuMessage + "\n\nDiscord messages are " + discord_status;
@@ -522,6 +527,7 @@ default {
         integer SND_LM_OFF_GLOW    = 313;
         integer SND_LM_ON_TINT     = 314;
         integer SND_LM_OFF_TINT    = 315;
+        integer SND_LM_IM_OWNER    = 316;
         integer SND_LM_PROFILE_TXT = 400;
 
         // Return code from writes to linkset datastore
@@ -768,6 +774,15 @@ default {
                 linksetDataWrite(id, OWNER_O_LSD_KEY, (string)ownerOnly, SND_LM_OWNER_ONLY, "Access mode");
                 displayDialogMenu("settings");
                 return;
+            } else if ((message == "IM Owner") || (message == "Disable IM")) {
+                if (message == "IM Owner") {
+                    IMowner = TRUE;
+                } else {
+                    IMowner = FALSE;
+                }
+                linksetDataWrite(id, IM_OWNER_LSD_KEY, (string)IMowner, SND_LM_IM_OWNER, "IM Owner");
+                displayDialogMenu("settings");
+                return;
             } else if (llListFindList(glow_menu, [message]) != -1) {
                 string glow_status;
                 if (message == "Glow OFF") {
@@ -855,6 +870,7 @@ default {
         integer RCV_LM_OFF_TINT    = 22;
         integer RCV_LM_SETSIDE_TXT = 23;
         integer RCV_LM_PROFILE_TXT = 24;
+        integer RCV_LM_IM_OWNER    = 25;
 
         if (num == RCV_LM_TARGET_UUID) {
             TargetUuid = id;
@@ -864,6 +880,8 @@ default {
             CheckInterval = (float)message;
         } else if (num == RCV_LM_OWNER_ONLY) {
             ownerOnly = (integer)message;
+        } else if (num == RCV_LM_IM_OWNER) {
+            IMowner = (integer)message;
         } else if (num == RCV_LM_BLING) {
             particles = (integer)message;
         } else if (num == RCV_LM_HOVER_TEXT) {

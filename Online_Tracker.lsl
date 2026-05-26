@@ -91,6 +91,8 @@ string  OFF_TINT_LSD_KEY = "offline_tint";
 string  TEXTURE_LSD_KEY  = "texture_sides";
 // Custom profile texture linkset data key
 string  PRO_TXT_LSD_KEY  = "custom_profile";
+// IM Owner linkset data key
+string  IM_OWNER_LSD_KEY  = "im_owner";
 //
 // Linked Message Numbers
 //
@@ -110,6 +112,7 @@ integer SND_LM_ON_TINT     = 21;
 integer SND_LM_OFF_TINT    = 22;
 integer SND_LM_SETSIDE_TXT = 23;
 integer SND_LM_PROFILE_TXT = 24;
+integer SND_LM_IM_OWNER    = 25;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
@@ -269,6 +272,13 @@ GetDatastoreValues() {
         ownerOnly = (integer)linksetValue;
     }
     llMessageLinked(LINK_THIS, SND_LM_OWNER_ONLY, (string)ownerOnly, "");
+
+    // IM Owner enable/disable
+    linksetValue = llLinksetDataRead(IM_OWNER_LSD_KEY);
+    if ((linksetValue == "0") || (linksetValue == "1")) {
+        IMowner = (integer)linksetValue;
+    }
+    llMessageLinked(LINK_THIS, SND_LM_IM_OWNER, (string)IMowner, "");
 
     // Particle display enable/disable
     linksetValue = llLinksetDataRead(BLING_LSD_KEY);
@@ -788,6 +798,8 @@ default {
         integer RCV_LM_ON_TINT     = 314;
         // RCV_LM_OFF_TINT    = 315  : Set offline tint color
         integer RCV_LM_OFF_TINT    = 315;
+        // RCV_LM_IM_OWNER    = 316  : Set IM Owner boolean
+        integer RCV_LM_IM_OWNER    = 316;
         // RCV_LM_PROFILE_TXT = 400  : Set custom profile pic
         integer RCV_LM_PROFILE_TXT = 400;
 
@@ -833,6 +845,8 @@ default {
             SetProfileTexture();
         } else if (num == RCV_LM_OWNER_ONLY) {
             ownerOnly = (integer)message;
+        } else if (num == RCV_LM_IM_OWNER) {
+            IMowner = (integer)message;
         } else if (num == RCV_LM_WEBHOOK_URL) {
             Discord_URL = message;
             DiscordRelay = TRUE;

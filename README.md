@@ -114,6 +114,8 @@ The owner of the rezzed `Discord IM Online Tracker` object can configure and cus
 
 - Enter the tracked Avatar UUID
 - Enter your Discord channel Webhook URL
+- Enable or disable Owner only access
+- Enable or disable IM Owner online status updates
 - Enable or disable status display in Hover Text
 - Enable or disable tinting of the frame border to further indicate online status
 - Enable or disable frame border textures/colors
@@ -127,6 +129,7 @@ The owner of the rezzed `Discord IM Online Tracker` object can configure and cus
 The default settings for all configuration parameters should work well. However, if you wish to customize the object and its behavior you can do so in a variety of ways:
 
 - Enable or disable IM notifications to owner
+    - If enabled the Owner recieves Instant Message online status notifications
     - Default: IM notifications to owner are enabled
 - Enable or disable notifications to all
     - If enabled non-owner users can click the object to get an online status message in local chat
