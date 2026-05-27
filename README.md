@@ -4,15 +4,18 @@ The `Discord IM Online Tracker` monitors the online status of any avatar in Seco
 
 See [https://online.neoman.dev](https://online.neoman.dev) for full documentation and How-To articles.
 
+A preconfigured ready-to-deploy `Discord IM Online Tracker` is available on the
+[Second Life Marketplace](https://marketplace.secondlife.com/p/Discord-IM-Online-Tracker/28289130).
+
 ## Table of Contents
 
 - [FEATURES](#features)
 - [CONTENTS](#contents)
-- [RELEASES](#releases)
 - [SETUP STEPS](#setup-steps)
 - [CONFIGURATION](#configuration)
 - [DISCORD SETUP](#discord-setup)
 - [LICENSE](#license)
+- [RELEASES](#releases)
 - [FEEDBACK](#feedback)
 
 ## FEATURES
@@ -33,18 +36,19 @@ The Discord IM Online Tracker is a sculpted & scripted prim with the following f
 - Online status notifications can be monitored when you are offline if Discord is configured
 - Secure setting and storage of your Discord Webhook URL using the linkset datastore
   - No notecard configuration needed, all configuration is performed via dialog menus
+- Touch the object to open a configuration dialog menu (owner only)
 - The frequency of Online status updates can be configured [Default: every 2 minutes]
 - The in-world object is a beveled frame displaying the tracked Avatar's profile pic and online status
-- The beveled frame can be customized in several ways
     - A custom picture can be configured rather than the Avatar's profile pic
-    - Custom textures can be provided to texture the bevels on the frame
-    - Glow and color of the frame bevels can be customized
-- Touch the object to open a configuration dialog menu (owner only)
+    - The in-world object can be made transparent for privacy via the configuration dialog menu
+    - The beveled frame can be customized in several ways
+        - Custom textures can be provided to texture the bevels on the frame
+        - Glow and color of the frame bevels can be customized
 - Users can touch the object to receive a status update if configured (see `OWNER_ONLY` below)
 - Mouse hover over the in-world object will display the online status in the object description
-- Optimized low lag script and only a single prim
+- Only a single prim, low lag scripts optimized with [LSL-PyOptimizer](https://github.com/Sei-Lisa/LSL-PyOptimizer)
 - Particle display when the tracked Avatar logs in or logs out
-- Open Source, GPL Version 3 licensed script, view the source on [Github](https://github.com/missyrestless/OnlineTracker)
+- Open Source, GPL Version 3 licensed scripts, view the source on [Github](https://github.com/missyrestless/OnlineTracker)
 
 ## CONTENTS
 
@@ -60,14 +64,6 @@ After unpacking the product box, find the Discord IM Online Tracker folder in yo
 - Dialog Menu script is Copy/No Modify/No Transfer
 - Online Tracker script is Copy/No Modify/No Transfer
 - Notecards are Copy/Modify/Transfer
-
-## RELEASES
-
-To create a Discord IM Online Tracker from release artifacts in this repository, download the `Online_Tracker.lslo` and `Dialog_Menu.lslo` optimized LSL scripts from the latest release. Upload these to Second Life and copy them into a prim.
-
-Note that creating a custom scripted prim from release artifacts may not function as expected. The prim needs to be sculpted in the proper manner and prim faces numbered matching what the script expects. The Second Life Marketplace listing for this product includes a rezzable object already prepared in this manner. The DIY approach using release artifacts may require additional effort but is provided for those who wish to experiment and customize.
-
-More detailed setup instructions can be found in the `Setup_Instructions.txt` release artifact or this README.
 
 ## SETUP STEPS
 
@@ -120,6 +116,7 @@ The owner of the rezzed `Discord IM Online Tracker` object can configure and cus
 - Enable or disable tinting of the frame border to further indicate online status
 - Enable or disable frame border textures/colors
 - Enable or disable particle displays
+- Enable or disable object transparency
 - Select frame border online and offline textures
 - Select frame border online and offline tint color
 - Select frame online and offline glow status
@@ -166,8 +163,11 @@ The default settings for all configuration parameters should work well. However,
     - Default: the online glow status is set to `0.2`
 - Set the offline glow status
     - Default: the offline glow status is set to `0.0`
-- Specify if the in-world object will emit a particle display on login/logout/touch
+- Enable or disable particle displays on login/logout/touch
     - Default: particle displays are enabled by default
+- Enable or disable in-world object transparency
+    - Some may choose to hide the Online Tracker object from view
+    - Default: object is visible by default
 - Set an alternate picture to use on the main face of the prim
     - Default: the profile picture of the tracked avatar is displayed on prim face 0
     - Drag and Drop a custom texture to display on prim face 0 into the object's Contents
@@ -193,19 +193,7 @@ In the channel list, you will find a small cogwheel icon, that gets you to the c
 https://discord.com/api/webhooks/aaaaaalotofgibberishandnumbersandsuch
 ```
 
-The Webhook might also look like this:
-
-```
-https://discordapp.com/api/webhooks/aaaaaalotofgibberishandnumbersandsuch
-```
-
-Or like this:
-
-```
-https://ptb.discord.com/api/webhooks/aaaaaalotofgibberishandnumbersandsuch
-```
-
-All three versions work fine - just use whichever Discord gives you.
+Click `Copy Webhook URL` to copy the Webhook URL to your clipboard.
 
 ### Configuration
 
@@ -254,6 +242,16 @@ The `Online_Tracker.lsl` and `Dialog_Menu.lsl` scripts are released under the te
 Software theft and piracy is rampant in Second Life. For example, almost all of the commercial Animation Overriders (AO) available in Second Life are based on the GPL AO created years ago by Zhao but none of these commercial vendors make their source code available nor have they complied with the licensing terms of the GPL. They reap significant profits and do not contribute back to the open source community. It is basically the Wild Wild West out there with little or no enforcement of license terms and very little action from Linden Labs to curb this behavior.
 
 The Truth &amp; Beauty Lab creates open source projects for Second Life and complies with open source licensing in all of its products and projects. We encourage others to do so as well. Open source thrives when there is an active community contributing to its development and adoption. In the absence of any effective enforcement mechanism, compliance and contribution to open source projects in Second Life must rely almost entirely on a community of cooperative and supportive individuals. Please join us in this effort.
+
+## RELEASES
+
+To create a Discord IM Online Tracker from release artifacts in this repository, download the `Online_Tracker.lslo` and `Dialog_Menu.lslo` optimized LSL scripts from the latest release. Upload these to Second Life and copy them into a prim.
+
+Note that creating a custom scripted prim from release artifacts may not function as expected. The prim needs to be sculpted in the proper manner and prim faces numbered matching what the script expects. The
+[Second Life Marketplace listing](https://marketplace.secondlife.com/p/Discord-IM-Online-Tracker/28289130)
+for this product includes a rezzable object already prepared in this manner. The DIY approach using release artifacts may require additional effort but is provided for those who wish to experiment and customize.
+
+More detailed setup instructions can be found in the `Setup_Instructions.txt` release artifact or this README.
 
 ## FEEDBACK
 
