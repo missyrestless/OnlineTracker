@@ -68,7 +68,9 @@ string  TEXTURE_LSD_KEY  = "texture_sides";
 // Custom profile texture linkset data key
 string  PRO_TXT_LSD_KEY  = "custom_profile";
 // IM Owner linkset data key
-string  IM_OWNER_LSD_KEY  = "im_owner";
+string  IM_OWNER_LSD_KEY = "im_owner";
+// Transparency linkset data key
+string  OPAQUE_LSD_KEY   = "is_transparent";
 //
 // Dialog Menu & listener for Webhook URL management
 float   LISTEN_TTL      = 60.0;                
@@ -118,6 +120,7 @@ string  profilePic     = "";
 string  ProfileTexture = "";
 integer UseRGB         = FALSE;
 integer TintSides      = FALSE;
+integer isTransparent  = FALSE;
 string  OnlineTexture  = "Mosaic-Online";
 string  OfflineTexture = "Mosaic-Offline";
 string  onlineGlow     = "0.2";
@@ -201,7 +204,7 @@ list arrange(list l) {
 displayDialogMenu(string menu) {
     listenHandle = llListen(dialogChannel, "", owner, "");
     list texture_menu = [];
-    list tint_menu = color_menu;
+    list this_menu = [];
     string menuMessage;
 
     pageMenuName = menu;
@@ -257,7 +260,8 @@ displayDialogMenu(string menu) {
         llDialog(owner, menuMessage, arrange(["On Tint", "Off Tint", "Main Menu", "Close"]), dialogChannel);
     } else if (menu == "onTint") {
         online_tint = TRUE;
-        tint_menu += ["Main Menu", "Close"];
+        this_menu = color_menu;
+        this_menu += ["Main Menu", "Close"];
         integer vIndex = llListFindList(color_vectors, [onlineTint]);
         if (vIndex != -1) {
             string cn = llList2String(color_menu, vIndex);
@@ -265,15 +269,66 @@ displayDialogMenu(string menu) {
         } else {
             menuMessage = "\nSelect an online tint";
         }
-        ShowMenu(menuMessage, tint_menu);
+        ShowMenu(menuMessage, this_menu);
     } else if (menu == "offTint") {
         online_tint = FALSE;
-        tint_menu += ["Main Menu", "Close"];
+        this_menu = color_menu;
+        this_menu += ["Main Menu", "Close"];
         menuMessage = "\nCurrent offline tint color is " + (string)offlineTint + "\n\nSelect an offline tint";
-        ShowMenu(menuMessage, tint_menu);
+        ShowMenu(menuMessage, this_menu);
     } else if (menu == "settings") {
         menuMessage = "\nEnable, disable, and configure appearance and behavior of the Online Tracker";
         menuMessage += "\n\nCurrent online status check interval:\n\t" + FormatFloat(CheckInterval) + " seconds";
+        string im = "IM Owner";
+        if (IMowner) {
+            im = "Disable IM";
+        }
+        menuMessage += "\n\nSelect an option";
+        this_menu = ["Main Menu", "Glow", im];
+        if (num_Textures("Profile") > 0) {
+            this_menu += ["Custom Pic"];
+        }
+        if (HoverText) {
+            this_menu += ["Hover OFF"];
+        } else {
+            this_menu += ["Hover ON"];
+        }
+        if (TintSides) {
+            this_menu += ["Tint OFF", "Tint Color"];
+        } else {
+            this_menu += ["Tint ON"];
+        }
+        if (UseRGB) {
+            this_menu += ["Texture ON"];
+        } else {
+            this_menu += ["Color ON"];
+        }
+        if (particles) {
+            this_menu += ["Bling OFF"];
+        } else {
+            this_menu += ["Bling ON"];
+        }
+        if (!UseRGB) {
+            this_menu += ["Pick Frame"];
+        }
+        if (isTransparent) {
+            this_menu += ["Opaque"];
+        } else {
+            this_menu += ["Transparent"];
+        }
+        this_menu += ["Close"];
+        ShowMenu(menuMessage, this_menu);
+    } else if (menu == "stop") {
+        llDialog(owner, "Do you wish to proceed with shutdown of the online tracker?", arrange(["YES", "NO"]), dialogChannel);
+    } else {
+        this_menu = ["Discord", "Say Status", "Target AVI", "Interval", "Show Conf", "Settings"];
+        string discord_status;
+        if (DiscordRelay) {
+            discord_status = "Enabled";
+        } else {
+            discord_status = "Disabled. Click the Discord button to enter your Webhook URL";
+        }
+        menuMessage = "\nTracking " + TargetDisplayName + ". Click the Target AVI button to configure tracked Avatar";
         string mode = "All Access";
         if (ownerOnly) {
             mode = "Owner Only";
@@ -284,60 +339,15 @@ displayDialogMenu(string menu) {
         } else {
             mode = "Owner Only";
         }
-        string im = "IM Owner";
-        if (IMowner) {
-            im = "Disable IM";
+        if (isTracking) {
+            this_menu += [mode, "Stop", "Close"];
+        } else {
+            this_menu += [mode, "Start", "Close"];
         }
+        menuMessage = menuMessage + "\n\nDiscord messages are " + discord_status;
         menuMessage += "\n\nShow Conf = Display current configuration values";
         menuMessage += "\n\nSelect an option";
-        list sett_menu = ["Main Menu", "Show Conf", "Glow", "Interval", im, mode];
-        if (num_Textures("Profile") > 0) {
-            sett_menu += ["Custom Pic"];
-        }
-        if (HoverText) {
-            sett_menu += ["Hover OFF"];
-        } else {
-            sett_menu += ["Hover ON"];
-        }
-        if (TintSides) {
-            sett_menu += ["Tint OFF", "Tint Color"];
-        } else {
-            sett_menu += ["Tint ON"];
-        }
-        if (UseRGB) {
-            sett_menu += ["Texture ON"];
-        } else {
-            sett_menu += ["Color ON"];
-        }
-        if (particles) {
-            sett_menu += ["Bling OFF"];
-        } else {
-            sett_menu += ["Bling ON"];
-        }
-        if (!UseRGB) {
-            sett_menu += ["Pick Frame"];
-        }
-        sett_menu += ["Close"];
-        ShowMenu(menuMessage, sett_menu);
-    } else if (menu == "stop") {
-        llDialog(owner, "Do you wish to proceed with shutdown of the online tracker?", arrange(["YES", "NO"]), dialogChannel);
-    } else {
-        list main_menu = ["Discord", "Say Status", "Target AVI", "Settings"];
-        if (isTracking) {
-            main_menu += ["Stop", "Close"];
-        } else {
-            main_menu += ["Start", "Close"];
-        }
-        string discord_status;
-        if (DiscordRelay) {
-            discord_status = "Enabled";
-        } else {
-            discord_status = "Disabled. Click the Discord button to enter your Webhook URL";
-        }
-        menuMessage = "\nTracking " + TargetDisplayName + ". Click the Target AVI button to configure tracked Avatar";
-        menuMessage = menuMessage + "\n\nDiscord messages are " + discord_status;
-        menuMessage += "\n\nSelect an option";
-        ShowMenu(menuMessage, main_menu);
+        ShowMenu(menuMessage, this_menu);
     }
     inDialogMenu = TRUE;
     llSetTimerEvent(60);
@@ -365,6 +375,7 @@ ShowConf() {
     confMsg += "\nOffline tint = " + (string)offlineTint;
     confMsg += "\nOnline glow = " + stripTrailingZeros(onlineGlow);
     confMsg += "\nOffline glow = " + stripTrailingZeros(offlineGlow);
+    confMsg += "\nTransparency = " + (string)isTransparent;
     if (ProfileTexture == "") {
         confMsg += "\nCustom profile texture = NONE";
     } else {
@@ -468,9 +479,7 @@ showDiscordMenu() {
     dcMsg += "\n'Clear' = Clear the existing Webhook URL from this script's memory";
     dcMsg += "\n'Check' = Displays the stored Webhook URL in the owner's chat window";
     dcMsg += "\n\nChoose an option:";
-    llDialog(owner, dcMsg,
-        arrange(["Webhook", "Test", "Clear", "Check", "Close"]),
-        dmenuChannel);
+    llDialog(owner, dcMsg, arrange(["Webhook", "Test", "Clear", "Check", "Close"]), dmenuChannel);
 }
 
 showTargetMenu() {
@@ -530,6 +539,7 @@ default {
         integer SND_LM_OFF_TINT    = 315;
         integer SND_LM_IM_OWNER    = 316;
         integer SND_LM_PROFILE_TXT = 400;
+        integer SND_LM_TRANSPARENT = 420;
 
         // Return code from writes to linkset datastore
         integer rc;
@@ -538,6 +548,7 @@ default {
         if (id != owner) return;
 
         if (channel == dmenuChannel) {
+            string dataRead;
             if (message == "Webhook") {
                 if (inputListen != -1) llListenRemove(inputListen);
                 inputListen = llListen(discordChannel, "", id, "");
@@ -552,7 +563,12 @@ default {
                 llLinksetDataDelete(DISCORD_LSD_KEY);
                 llRegionSayTo(id, 0, "[Online Tracker] Webhook cleared.");
             } else if (message == "Check") {
-                llRegionSayTo(id, 0, "[Online Tracker] Url is: " + llLinksetDataRead(DISCORD_LSD_KEY));
+                dataRead = llLinksetDataRead(DISCORD_LSD_KEY);
+                if (dataRead == "") {
+                    llRegionSayTo(id, 0, "[Online Tracker] Url is: UNSET");
+                } else {
+                    llRegionSayTo(id, 0, "[Online Tracker] Url is: " + dataRead);
+                }
             } else if (message == "Input UUID") {
                 if (inputListen != -1) llListenRemove(inputListen);
                 inputListen = llListen(targetChannel, "", id, "");
@@ -566,11 +582,17 @@ default {
                 llLinksetDataDelete(AV_UUID_LSD_KEY);
                 llRegionSayTo(id, 0, "[Online Tracker] target Avatar UUID cleared.");
             } else if (message == "UUID Check") {
-                llRegionSayTo(id, 0, "[Online Tracker] target Avatar UUID is: " + llLinksetDataRead(AV_UUID_LSD_KEY));
+                dataRead = llLinksetDataRead(AV_UUID_LSD_KEY);
+                if (dataRead == "") {
+                    llRegionSayTo(id, 0, "[Online Tracker] target Avatar UUID is: UNSET");
+                } else {
+                    llRegionSayTo(id, 0, "[Online Tracker] target Avatar UUID is: " + dataRead);
+                }
             } else if (message == "Close") {
-                displayDialogMenu("main");
                 return; // Exit the listen event
             }
+            showDiscordMenu();
+            return;
         } else if (channel == discordChannel) {
             rc = linksetDataWrite(id, DISCORD_LSD_KEY, message, SND_LM_WEBHOOK_URL, "Webhook");
             if ((rc == LINKSETDATA_OK) || (rc == LINKSETDATA_NOUPDATE)) {
@@ -664,6 +686,18 @@ default {
             } else if (message == "Target AVI") {
                 showTargetMenu();
                 return;
+            } else if (message == "Opaque") {
+                rc = linksetDataWrite(id, OPAQUE_LSD_KEY, (string)FALSE, SND_LM_TRANSPARENT, message);
+                llSetAlpha(1.0, ALL_SIDES);
+                isTransparent = FALSE;
+                displayDialogMenu("settings");
+                return;
+            } else if (message == "Transparent") {
+                rc = linksetDataWrite(id, OPAQUE_LSD_KEY, (string)TRUE, SND_LM_TRANSPARENT, message);
+                llSetAlpha(0.0, ALL_SIDES);
+                isTransparent = TRUE;
+                displayDialogMenu("settings");
+                return;
             } else if (message == "YES") {
                 llMessageLinked(LINK_THIS, SND_LM_CLEAR_TIMER, message, "");
                 isTracking = FALSE;
@@ -719,8 +753,6 @@ default {
                 return;
             } else if (message == "Show Conf") {
                 ShowConf();
-                displayDialogMenu("settings");
-                return;
             } else if (message == "On Frame") {
                 displayDialogMenu("onFrame");
                 return;
@@ -773,8 +805,6 @@ default {
                     ownerOnly = FALSE;
                 }
                 linksetDataWrite(id, OWNER_O_LSD_KEY, (string)ownerOnly, SND_LM_OWNER_ONLY, "Access mode");
-                displayDialogMenu("settings");
-                return;
             } else if ((message == "IM Owner") || (message == "Disable IM")) {
                 if (message == "IM Owner") {
                     IMowner = TRUE;
@@ -872,6 +902,7 @@ default {
         integer RCV_LM_SETSIDE_TXT = 23;
         integer RCV_LM_PROFILE_TXT = 24;
         integer RCV_LM_IM_OWNER    = 25;
+        integer RCV_LM_TRANSPARENT = 26;
 
         if (num == RCV_LM_TARGET_UUID) {
             TargetUuid = id;
@@ -889,6 +920,8 @@ default {
             HoverText = (integer)message;
         } else if (num == RCV_LM_TINT_SIDES) {
             TintSides = (integer)message;
+        } else if (num == RCV_LM_TRANSPARENT) {
+            isTransparent = (integer)message;
         } else if (num == RCV_LM_ONLINE_TXT) {
             OnlineTexture = message;
         } else if (num == RCV_LM_OFFLINE_TXT) {

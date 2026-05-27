@@ -27,10 +27,14 @@
 // 23-May-2026 - Use linkset datastore to store target UUID and Webhook URL
 //               Example linkset datastore code contributed by allie (allieee.lykin)
 // 24-May-2026 - Split dialog menus out into separate script, use llMessageLinked()
+// 25-May-2026 - All configuration parameters now stored in linkset datastore
+//               Dialog Menu buttons to set all configuration parameters
+//               Release 1.1.0
+// 27-May-2026 - Add support for setting/unsetting transparency
 //
 // VARIABLES
 //
-string version = "1.1.1";
+string version = "1.1.2";
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
 // Name of the avatar to track
@@ -93,6 +97,8 @@ string  TEXTURE_LSD_KEY  = "texture_sides";
 string  PRO_TXT_LSD_KEY  = "custom_profile";
 // IM Owner linkset data key
 string  IM_OWNER_LSD_KEY  = "im_owner";
+// Transparency linkset data key
+string  OPAQUE_LSD_KEY   = "is_transparent";
 //
 // Linked Message Numbers
 //
@@ -113,6 +119,7 @@ integer SND_LM_OFF_TINT    = 22;
 integer SND_LM_SETSIDE_TXT = 23;
 integer SND_LM_PROFILE_TXT = 24;
 integer SND_LM_IM_OWNER    = 25;
+integer SND_LM_TRANSPARENT = 26;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
@@ -144,9 +151,11 @@ string  OfflineTexture = "Mosaic-Offline";
 float   onlineGlow     = 0.2;
 float   offlineGlow    = 0.0;
 
-integer IsOnline       = -1; // Indicates uninitialized online status
+integer isOnline       = -1; // Indicates uninitialized online status
 integer HoverText      = FALSE;
 integer online_tint;
+// Is the object transparent
+integer isTransparent = FALSE;
 // Should online status be sent to owner as an Instant Message
 integer IMowner = TRUE;
 // Should online status messages be restricted to owner
@@ -349,6 +358,13 @@ GetDatastoreValues() {
         offlineTint = (vector)linksetValue;
     }
     llMessageLinked(LINK_THIS, SND_LM_OFF_TINT, (string)offlineTint, "");
+
+    // Transparency
+    linksetValue = llLinksetDataRead(OPAQUE_LSD_KEY);
+    if (linksetValue != "") {
+        isTransparent = (integer)linksetValue;
+    }
+    llMessageLinked(LINK_THIS, SND_LM_TRANSPARENT, (string)isTransparent, "");
 
     // Texture or RGB enable/disable
     linksetValue = llLinksetDataRead(TEXTURE_LSD_KEY);
@@ -751,7 +767,7 @@ default {
 
     state_entry() {
         owner         = llGetOwner();
-        IsOnline      = -1; // Indicates uninitialized online status
+        isOnline      = -1; // Indicates uninitialized online status
         lastLogoff    = 0;
         lastLogin     = 0;
         lastLogoffStr = "";
@@ -802,6 +818,8 @@ default {
         integer RCV_LM_IM_OWNER    = 316;
         // RCV_LM_PROFILE_TXT = 400  : Set custom profile pic
         integer RCV_LM_PROFILE_TXT = 400;
+        // RCV_LM_TRANSPARENT = 420  : Set transparency
+        integer RCV_LM_TRANSPARENT = 420;
 
         if (num == RCV_LM_SEND_DC_MSG) {
             D_COL = D_BLU;
@@ -843,6 +861,8 @@ default {
         } else if (num == RCV_LM_PROFILE_TXT) {
             ProfileTexture = message;
             SetProfileTexture();
+        } else if (num == RCV_LM_TRANSPARENT) {
+            isTransparent = (integer)message;
         } else if (num == RCV_LM_OWNER_ONLY) {
             ownerOnly = (integer)message;
         } else if (num == RCV_LM_IM_OWNER) {
@@ -949,22 +969,22 @@ default {
             }
             SetSideTextures();
 
-            // Force an online status report the first time through when IsOnline is uninitialized
-            if (IsOnline == -1) {
+            // Force an online status report the first time through when isOnline is uninitialized
+            if (isOnline == -1) {
                 if (CurrentlyOnline) {
-                    IsOnline = FALSE;
+                    isOnline = FALSE;
                 } else {
-                    IsOnline = TRUE;
+                    isOnline = TRUE;
                 }
             }
 
             // IM if status has changed
             if (CurrentlyOnline) {
-                if ((!IsOnline) || (queryid == touchDataRequestID)) {
+                if ((!isOnline) || (queryid == touchDataRequestID)) {
                     // Add a little pizzazz
                     if (particles) {
                         // Particles are enabled
-                        if (!IsOnline) {
+                        if (!isOnline) {
                             // User logged in
                             llSetTimerEvent(20);
                         } else {
@@ -1007,16 +1027,16 @@ default {
                             sendToDiscord(status_msg, "Offline for " + elapsedTimeStr, 1, timeStamp);
                         }
                     }
-                    if (!IsOnline) {
+                    if (!isOnline) {
                         lastLoginStr = Unix2SLT(llGetUnixTime());
                     }
                 }
             } else {
-                if ((IsOnline) || (queryid == touchDataRequestID)) {
+                if ((isOnline) || (queryid == touchDataRequestID)) {
                     // Add a little pizzazz
                     if (particles) {
                         // Particles are enabled
-                        if (!IsOnline) {
+                        if (!isOnline) {
                             // User logged in
                             llSetTimerEvent(30);
                         } else {
@@ -1062,7 +1082,7 @@ default {
                             sendToDiscord(status_msg, "Online for " + elapsedTimeStr, 0, timeStamp);
                         }
                     }
-                    if (IsOnline) {
+                    if (isOnline) {
                         lastLogoffStr = Unix2SLT(llGetUnixTime());
                     }
                 }
@@ -1073,7 +1093,7 @@ default {
             }
 
             // Update status
-            IsOnline = CurrentlyOnline;
+            isOnline = CurrentlyOnline;
         }
         else if (display_name_query == queryid) {
             TargetDisplayName = data;
