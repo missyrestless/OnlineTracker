@@ -350,6 +350,7 @@ ShowConf() {
     confMsg += "\nDiscord Webhook URL = " + Discord_URL;
     confMsg += "\nOnline check interval = " + FormatFloat(CheckInterval) + " seconds";
     confMsg += "\nOwner Only enable/disable = " + (string)ownerOnly;
+    confMsg += "\nIM Owner enable/disable = " + (string)ownerOnly;
     confMsg += "\nParticle display enable/disable = " + (string)particles;
     confMsg += "\nHover Text enable/disable = " + (string)HoverText;
     confMsg += "\nTint enable/disable = " + (string)TintSides;
