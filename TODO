@@ -2,17 +2,6 @@ Ummm, I'm gonna need you to go ahead come in tomorrow. So if you could be here
 around 9 that would be great, mmmk... oh oh! and I almost forgot ahh, I'm also
 gonna need you to go ahead and come in on Sunday too, kay.
 
-## TODO
-
-- Add photos of config menus to marketplace listing
-- Update doc website with latest sections from README
-
-- Longer term wish list
-  - Add support for tracking multiple avatars in a linked prim set
-  - Use Experience Key-Value pairs to store tracking data
-  - Use QuickChart or similar to generate graphs of online status over time
-    - https://quickchart.io/documentation/send-charts-discord-bot/
-
 ## DONE
 
 * DONE Add support for display of previous login/logoff
@@ -33,3 +22,15 @@ gonna need you to go ahead and come in on Sunday too, kay.
 * DONE Add support for custom display image via dialog menu
 * DONE Add Transparent option to Settings menu
 * DONE Doc the transparency feature & config
+* DONE Add photos of config menus to marketplace listing
+* DONE Update doc website with latest sections from README
+
+## TODO
+
+- Add photos of config menus to doc website in new config post
+
+- Longer term wish list
+  - Add support for tracking multiple avatars in a linked prim set
+  - Use Experience Key-Value pairs to store tracking data
+  - Use QuickChart or similar to generate graphs of online status over time
+    - https://quickchart.io/documentation/send-charts-discord-bot/
