@@ -31,7 +31,7 @@
 //               Dialog Menu buttons to set all configuration parameters
 //               Release 1.1.0
 // 27-May-2026 - Add support for setting/unsetting transparency
-// 28-May-2026 - Add support for multiple avatar tracking, up to 3
+// 30-May-2026 - Add support for multiple avatar tracking, up to 3
 //
 // VARIABLES
 //
@@ -667,6 +667,68 @@ integer IsValidURL(string url) {
 }
 //
 // END GENERAL FUNCTIONS
+//
+// PRIM SHAPE FUNCTIONS
+//
+// These use llSetPrimitiveParams with
+// PRIM_SIZE, <vector>
+// PRIM_TYPE,
+//   PRIM_TYPE_BOX [integer hole_shape, vector cut, float hollow, vector twist, vector top_size, vector top_shear]
+// PRIM_SLICE, <vector>
+//
+singlePrimShape() {
+    // Change to single frame display of 1 tracked avatar
+    // Single Avatar Square
+    // --------------------
+    // Path Cut: 0 - 1
+    // Hollow:   0
+    // Taper:    X 0.1     Y 0.1    (use taper = 1 - desired taper)
+    // Slice:    0 - 1
+    // Size:     1    1    0.04
+    // Rotation: 270  0    180
+    // Face:     0
+    // 
+    llSetPrimitiveParams([
+        PRIM_SIZE, <1.0, 1.0, 0.04>,
+        PRIM_TYPE, PRIM_TYPE_BOX, 0, <0.0, 1.0, 0.0>, 0.0, ZERO_VECTOR, <0.9, 0.9, 0.0>, ZERO_VECTOR,
+        PRIM_SLICE, <0.0, 1.0, 0.0>]);
+}
+
+doublePrimShape() {
+    // Double Avatar Squares
+    // ---------------------
+    // Path Cut: 0 - 1
+    // Hollow:   0
+    // Taper:    X 1.0     Y 0.0    (use taper = 1 - desired taper)
+    // Slice:    0 - 1
+    // Size:     2    1    0.04
+    // Rotation: 90   0    0
+    // Faces:    2 and 4
+    // 
+    llSetPrimitiveParams([
+        PRIM_SIZE, <2.0, 1.0, 0.04>,
+        PRIM_TYPE, PRIM_TYPE_BOX, 0, <0.0, 1.0, 0.0>, 0.0, ZERO_VECTOR, <0.0, 1.0, 0.0>, ZERO_VECTOR,
+        PRIM_SLICE, <0.0, 1.0, 0.0>]);
+}
+
+triplePrimShape() {
+    // Triple Avatar Squares
+    // ---------------------
+    // Path Cut: 0 - 1
+    // Hollow:   0
+    // Taper:    X 1.0     Y 0.0    (use taper = 1 - desired taper)
+    // Slice:    0 - 0.650
+    // Size:     3    1    0.04
+    // Rotation: 90   0    0
+    // Faces:    0, 2, and 4
+    //
+    llSetPrimitiveParams([
+        PRIM_SIZE, <3.0, 1.0, 0.04>,
+        PRIM_TYPE, PRIM_TYPE_BOX, 0, <0.0, 1.0, 0.0>, 0.0, ZERO_VECTOR, <0.0, 1.0, 0.0>, ZERO_VECTOR,
+        PRIM_SLICE, <0.0, 0.650, 0.0>]);
+}
+//
+// END PRIM SHAPE FUNCTIONS
 //
 // PARTICLE FUNCTIONS
 //
