@@ -31,17 +31,25 @@
 //               Dialog Menu buttons to set all configuration parameters
 //               Release 1.1.0
 // 27-May-2026 - Add support for setting/unsetting transparency
+// 28-May-2026 - Add support for multiple avatar tracking, up to 3
 //
 // VARIABLES
 //
-string version = "1.1.2";
+string version = "1.2.0";
+// How many avatars are we tracking
+integer numAvatars = 1;
+// Which avatar is the current event for (0, 1, or 2)
+integer currentAvatar = 0;
 // UUID of the avatar to track
-key TargetUuid = NULL_KEY;
+key  TargetUuid  = NULL_KEY;
+list TargetUuids = [NULL_KEY, NULL_KEY, NULL_KEY];
 // Name of the avatar to track
-string TargetName = "";
-string TargetDisplayName = "";
+string TargetName         = "";
+list   TargetNames        = ["", "", ""];
+string TargetDisplayName  = "";
+list   TargetDisplayNames = ["", "", ""];
 // How often to check in seconds (60s minimum recommended)
-float CheckInterval = 120.0;
+float CheckInterval = 90.0;
 // ---------------------
 string onlineStatus = "Unknown";
 string objectDescription;
@@ -123,9 +131,13 @@ integer SND_LM_TRANSPARENT = 26;
 
 // Used to calculate time between login/logout
 integer lastLogoff = 0;
+list    lastLogoffs = [0, 0, 0];
 integer lastLogin = 0;
+list    lastLogins = [0, 0, 0];
 string  lastLoginStr = "";
+list    lastLoginStrs = ["", "", ""];
 string  lastLogoffStr = "";
+list    lastLogoffStrs = ["", "", ""];
 
 // Built-in white texture UUID
 string WHT_UUID = "5748decc-f629-461c-9a36-a35a221fe21f";
@@ -144,6 +156,7 @@ vector onlineTint  = GREEN;
 
 // Frame style and textures
 string  ProfileTexture = "";
+list    ProfileTextures = ["", "", ""];
 integer UseRGB         = FALSE;
 integer TintSides      = FALSE;
 string  OnlineTexture  = "Mosaic-Online";
@@ -169,6 +182,8 @@ key name_query;
 
 string profileURL;
 string webprofURL;
+list   profileURLs = [];
+list   webprofURLs = [];
 //
 // END VARIABLES
 //
@@ -189,7 +204,7 @@ SetSideTextures() {
         llSetPrimitiveParams([PRIM_FULLBRIGHT, 0, FALSE]);
     }
     // Sides and back
-    for (i = 1; i < faces; i++) {
+    for (i = 1; i < faces; i = i + 2) {
         if (UseRGB) {
             llSetTexture(WHT_UUID, i);
             llSetColor(col, i);
