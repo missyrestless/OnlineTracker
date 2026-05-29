@@ -37,9 +37,9 @@
 //
 string version = "1.2.0";
 // How many avatars are we tracking
-integer numAvatars = 1;
+integer numAvatars    = 1;
 // Which avatar is the current event for (0, 1, or 2)
-integer currentAvatar = 0;
+integer currentTarget = 0;
 // UUID of the avatar to track
 key  TargetUuid  = NULL_KEY;
 list TargetUuids = [NULL_KEY, NULL_KEY, NULL_KEY];
@@ -111,6 +111,7 @@ string  OPAQUE_LSD_KEY   = "is_transparent";
 // Linked Message Numbers
 //
 // Send to dialog menu
+integer SND_LM_TARGET_LIST =  9;
 integer SND_LM_TARGET_UUID = 10;
 integer SND_LM_TARGET_NAME = 11;
 integer SND_LM_CK_INTERVAL = 12;
@@ -156,7 +157,6 @@ vector onlineTint  = GREEN;
 
 // Frame style and textures
 string  ProfileTexture = "";
-list    ProfileTextures = ["", "", ""];
 integer UseRGB         = FALSE;
 integer TintSides      = FALSE;
 string  OnlineTexture  = "Mosaic-Online";
@@ -181,8 +181,8 @@ key display_name_query;
 key name_query;
 
 string profileURL;
-string webprofURL;
 list   profileURLs = [];
+string webprofURL;
 list   webprofURLs = [];
 //
 // END VARIABLES
@@ -252,25 +252,30 @@ GetDatastoreValues() {
     //
     // Retrieve any configuration values stored in the linkset datastore
     //
-    // Target UUID
-    string linksetValue = llLinksetDataRead(AV_UUID_LSD_KEY);
-    if ((key)linksetValue) {
-        TargetUuid = (key)linksetValue;
-    } else {
-        if ((TargetUuid == NULL_KEY) || (TargetUuid == "target-avatar-uuid")) {
-            if (owner) {
-                TargetUuid = owner;
-            } else {
-                TargetUuid = Default_Uuid;
+    // Target UUIDs
+    integer i;
+    key     lval;
+    list    linksetValues = llParseString2List(llLinksetDataRead(AV_UUID_LSD_KEY), [","], []);
+    string  linksetValue;
+
+    for (i = 0; i < llGetListLength(linksetValues); ++i) {
+        if (i > 2) {
+            llOwnerSay("WARNING: Online Tracker linkset datastore overflow for target UUID storage");
+        } else {
+            lval = llList2Key(linksetValues, i);
+            if (lval) {
+                TargetUuids = llListReplaceList(TargetUuids, [lval], i, i);
             }
         }
     }
+    llMessageLinked(LINK_THIS, SND_LM_TARGET_LIST, (string)TargetUuids, "");
+    TargetUuid = llList2Key(TargetUuids, currentTarget);
     llMessageLinked(LINK_THIS, SND_LM_TARGET_UUID, "", TargetUuid);
     // Check if Target UUID is a valid key
     if (TargetUuid) {
         llOwnerSay("Discord IM Online Tracker initialization in progress");
     } else {
-        llOwnerSay("ERROR: Invalid Target Avatar UUID " + (string)TargetUuid);
+        llOwnerSay("WARNING: Null or Invalid Target Avatar UUID " + (string)TargetUuid);
     }
 
     // Discord Webhook URL
@@ -685,7 +690,7 @@ singlePrimShape() {
     // Taper:    X 0.1     Y 0.1    (use taper = 1 - desired taper)
     // Slice:    0 - 1
     // Size:     1    1    0.04
-    // Rotation: 270  0    180
+    // Rotation: 90   0    0
     // Face:     0
     // 
     llSetPrimitiveParams([
@@ -844,6 +849,8 @@ default {
 
     state_entry() {
         owner         = llGetOwner();
+        numAvatars    = 1;
+        currentTarget = 0;
         isOnline      = -1; // Indicates uninitialized online status
         lastLogoff    = 0;
         lastLogin     = 0;
@@ -1006,6 +1013,13 @@ default {
         } else {
             // Periodically check status
             agentDataRequestID = llRequestAgentData(TargetUuid, DATA_ONLINE);
+            key nextUUID = llList2Key(TargetUuids, (currentTarget + 1) % 3);
+            // If the next target UUID is set then increment the target
+            if (nextUUID) {
+                TargetUuid = nextUUID;
+                currentTarget = (++currentTarget) % 3;
+                init_target();
+            }
         }
     }
 
