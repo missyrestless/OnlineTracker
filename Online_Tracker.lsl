@@ -1047,7 +1047,6 @@ default {
 
             string elapsedTimeStr;
             string timeStamp = llGetTimestamp();
-            string status_pre = TargetDisplayName + " is now ";
             string status_msg = "";
             // Set hover text status and color
             onlineStatus = llList2String(stat_cols, CurrentlyOnline);   // boolean/index = 0   or 1
@@ -1143,7 +1142,8 @@ default {
                         particles_on = TRUE;
                     }
 
-                    status_msg = status_pre + "OFFLINE.";
+                    status_pre = status_pre + "OFFLINE. Click to view profile: ";
+                    status_msg = status_pre + profileURL;
                     lastLogoff = llGetUnixTime();
                     if (lastLogin <= 0) {
                         // No record of last login
