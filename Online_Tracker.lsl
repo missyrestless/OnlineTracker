@@ -382,8 +382,8 @@ profile_timer_init() {
         // Clear any previously set hover text
         llSetText("", ZERO_VECTOR, 0.0);
     }
-    llSetObjectName(TargetDisplayName + " Online Tracker");
-    objectDescription = TargetDisplayName + " is " + onlineStatus;
+    llSetObjectName(TargetName + " Online Tracker");
+    objectDescription = TargetName + " is " + onlineStatus;
     llSetObjectDesc(objectDescription);
     SetProfileTexture();
     // Start monitoring immediately
@@ -963,7 +963,7 @@ default {
             vector color = llList2Vector(stat_cols, CurrentlyOnline+2); // boolean/index = 0+2 or 1+2
 
             // Set the object description to the online status if it has changed
-            objectDescription = TargetDisplayName + " is " + onlineStatus;
+            objectDescription = TargetName + " is " + onlineStatus;
             if (llGetObjectDesc() != objectDescription) {
                 llSetObjectDesc(objectDescription);
             }
