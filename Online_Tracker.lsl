@@ -31,10 +31,11 @@
 //               Dialog Menu buttons to set all configuration parameters
 //               Release 1.1.0
 // 27-May-2026 - Add support for setting/unsetting transparency
+// 14-Jul-2026 - ASCII printable characters only in object name & description
 //
 // VARIABLES
 //
-string version = "1.1.2";
+string version = "1.1.3";
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
 // Name of the avatar to track
@@ -375,6 +376,16 @@ GetDatastoreValues() {
     llMessageLinked(LINK_THIS, SND_LM_SETSIDE_TXT, (string)UseRGB, "");
 }
 
+// Returns TRUE if 'name' is a valid object name, FALSE otherwise
+integer isValidObjectName(string name)
+{
+    string original_name = llGetObjectName();
+    llSetObjectName(name);
+    integer valid_name = llGetObjectName() == name;
+    llSetObjectName(original_name);
+    return valid_name;
+}
+
 profile_timer_init() {
     if (HoverText) {
         llSetText(TargetDisplayName + "\nChecking status...", WHITE, 1.0); // Initial hover text
@@ -382,9 +393,18 @@ profile_timer_init() {
         // Clear any previously set hover text
         llSetText("", ZERO_VECTOR, 0.0);
     }
-    llSetObjectName(TargetName + " Online Tracker");
-    objectDescription = TargetName + " is " + onlineStatus;
+    // Try to use the Display Name but llSetObject*() can only use ASCII printable characters
+    // For those avatars with unprintable characters in the display name, use the account name
+    llSetObjectName(TargetDisplayName + " Online Tracker");
+    if (llGetObjectName() != TargetDisplayName + " Online Tracker") {
+        llSetObjectName(TargetName + " Online Tracker");
+    }
+    objectDescription = TargetDisplayName + " is " + onlineStatus;
     llSetObjectDesc(objectDescription);
+    if (llGetObjectDesc() != objectDescription) {
+        objectDescription = TargetName + " is " + onlineStatus;
+        llSetObjectDesc(objectDescription);
+    }
     SetProfileTexture();
     // Start monitoring immediately
     llSetTimerEvent(CheckInterval);
