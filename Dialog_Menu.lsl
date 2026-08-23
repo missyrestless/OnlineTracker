@@ -554,8 +554,8 @@ default {
                 inputListen = llListen(discordChannel, "", id, "");
                 inDiscordMenu = TRUE;
                 llSetTimerEvent(LISTEN_TTL);
-
                 llTextBox(id, "\nPaste your Discord webhook URL into the box)", discordChannel);
+                return; // Exit the listen event
             } else if (message == "Test") {
                 llMessageLinked(LINK_THIS, SND_LM_SEND_DC_MSG, "Test message from Second Life **" +
                                            TargetDisplayName + "** Online Tracker", id);
@@ -574,8 +574,8 @@ default {
                 inputListen = llListen(targetChannel, "", id, "");
                 inTargetMenu = TRUE;
                 llSetTimerEvent(LISTEN_TTL);
-
                 llTextBox(id, "\nPaste the target Avatar's UUID into the box)", targetChannel);
+                return; // Exit the listen event
             } else if (message == "UUID Test") {
                 llMessageLinked(LINK_THIS, SND_LM_ONLINETOUCH, "", TargetUuid);
             } else if (message == "UUID Clear") {

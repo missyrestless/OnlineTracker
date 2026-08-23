@@ -32,10 +32,11 @@
 //               Release 1.1.0
 // 27-May-2026 - Add support for setting/unsetting transparency
 // 14-Jul-2026 - ASCII printable characters only in object name & description
+// 23-Aug-2026 - Fix Input box obscured by dialog menu, release 1.1.4
 //
 // VARIABLES
 //
-string version = "1.1.3";
+string version = "1.1.4";
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
 // Name of the avatar to track
