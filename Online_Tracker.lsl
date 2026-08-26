@@ -33,10 +33,11 @@
 // 27-May-2026 - Add support for setting/unsetting transparency
 // 14-Jul-2026 - ASCII printable characters only in object name & description
 // 23-Aug-2026 - Fix Input box obscured by dialog menu, release 1.1.4
+// 27-Aug-2026 - Clear linkset store and reset to defaults on transfer, release 1.1.5
 //
 // VARIABLES
 //
-string version = "1.1.4";
+string version = "1.1.5";
 // UUID of the avatar to track
 key TargetUuid = NULL_KEY;
 // Name of the avatar to track
@@ -1129,9 +1130,14 @@ default {
     }
 
     changed(integer change) {
-         if (change & (CHANGED_OWNER | CHANGED_INVENTORY)) {
-             llResetScript();
-         }
+        // Check if the change event was caused by an owner change
+        if (change & CHANGED_OWNER) {
+            // Reset/wipe all key-value pairs in the linkset data store
+            llLinksetDataReset();
+            llResetScript();
+        } else if (change & CHANGED_INVENTORY) {
+            llResetScript();
+        }
     }
 
     http_response(key req, integer status, list meta, string body) {
