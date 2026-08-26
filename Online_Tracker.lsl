@@ -601,7 +601,7 @@ sendToDiscord(string dm, string et, integer ols, string time) {
     } else {
         footerText += " logout";
     }
-    string userName = "Second Life Online Tracker " + version;
+    string userName = TargetName + " Online Tracker " + version;
 
     // Create the JSON payload, backslashing quotes all over the place
     string json = "{ \"avatar_url\": \"" + aviURL + TargetName + "/thumb_sl_image.png\", " +
